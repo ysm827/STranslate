@@ -50,9 +50,7 @@
                             </i:ConditionalExpression>
                         </i:ConditionBehavior>
                     </i:Interaction.Behaviors>
-                    <i:InvokeCommandAction
-                        Command="{Binding RelativeSource={RelativeSource AncestorType=control:OutputControl}, Path=RetryCommand}"
-                        CommandParameter="{Binding}" />
+                    <i:InvokeCommandAction Command="{Binding RelativeSource={RelativeSource AncestorType=control:OutputControl}, Path=RetryCommand}" CommandParameter="{Binding}" />
                 </i:EventTrigger>
             </i:Interaction.Triggers>
         </ComboBox>

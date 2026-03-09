@@ -539,7 +539,7 @@
 
     <sys:String x:Key="WindowScreenTypeRememberLastLaunchLocation">RememberLastLaunchLocation</sys:String>
     <sys:String x:Key="WindowScreenTypeCursor">Cursor</sys:String>
-    <sys:String x:Key="WindowScreenTypeFollowMouseOnHotkey">Follow mouse on hotkey</sys:String>
+    <sys:String x:Key="WindowScreenTypeFollowMouse">Follow mouse</sys:String>
     <sys:String x:Key="WindowScreenTypeFocus">Focus</sys:String>
     <sys:String x:Key="WindowScreenTypePrimary">Primary</sys:String>
     <sys:String x:Key="WindowScreenTypeCustom">Custom</sys:String>

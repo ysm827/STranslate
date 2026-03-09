@@ -1562,9 +1562,9 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
                 return;
             }
 
-            if (Settings.WindowScreen == WindowScreenType.FollowMouseOnHotkey)
+            if (Settings.WindowScreen == WindowScreenType.FollowMouse)
             {
-                UpdatePositionNearCursorForHotkey();
+                UpdatePositionNearCursor();
                 return;
             }
 
@@ -1625,7 +1625,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         }
     }
 
-    private void UpdatePositionNearCursorForHotkey()
+    private void UpdatePositionNearCursor()
     {
         if (!PInvoke.GetCursorPos(out var cursorPosition))
             return;
@@ -1717,7 +1717,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         switch (Settings.WindowScreen)
         {
             case WindowScreenType.Cursor:
-            case WindowScreenType.FollowMouseOnHotkey:
+            case WindowScreenType.FollowMouse:
                 screen = MonitorInfo.GetCursorDisplayMonitor();
                 break;
             case WindowScreenType.Focus:

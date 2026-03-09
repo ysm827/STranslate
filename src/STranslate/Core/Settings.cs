@@ -133,7 +133,7 @@ public partial class Settings : ObservableObject
     [ObservableProperty] public partial WindowScreenType WindowScreen { get; set; } = WindowScreenType.Cursor;
     public bool IsWindowAlignVisible =>
         WindowScreen != WindowScreenType.RememberLastLaunchLocation &&
-        WindowScreen != WindowScreenType.FollowMouseOnHotkey;
+        WindowScreen != WindowScreenType.FollowMouse;
     partial void OnWindowScreenChanged(WindowScreenType value) => OnPropertyChanged(nameof(IsWindowAlignVisible));
     [ObservableProperty] public partial WindowAlignType WindowAlign { get; set; } = WindowAlignType.Center;
     [ObservableProperty] public partial double MainWindowLeft { get; set; }
@@ -710,7 +710,7 @@ public enum WindowScreenType
 {
     RememberLastLaunchLocation,
     Cursor,
-    FollowMouseOnHotkey,
+    FollowMouse,
     Focus,
     Primary,
     Custom

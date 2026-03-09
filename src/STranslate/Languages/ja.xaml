@@ -523,7 +523,7 @@
 
     <sys:String x:Key="WindowScreenTypeRememberLastLaunchLocation">前回の位置を記憶</sys:String>
     <sys:String x:Key="WindowScreenTypeCursor">マウスカーソルのある画面</sys:String>
-    <sys:String x:Key="WindowScreenTypeFollowMouseOnHotkey">ホットキー起動時にマウス追従</sys:String>
+    <sys:String x:Key="WindowScreenTypeFollowMouse">マウス追従</sys:String>
     <sys:String x:Key="WindowScreenTypeFocus">フォーカスのある画面</sys:String>
     <sys:String x:Key="WindowScreenTypePrimary">メインディスプレイ</sys:String>
     <sys:String x:Key="WindowScreenTypeCustom">カスタムディスプレイ</sys:String>

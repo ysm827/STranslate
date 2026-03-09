@@ -540,7 +540,7 @@
 
     <sys:String x:Key="WindowScreenTypeRememberLastLaunchLocation">記住上次的位置</sys:String>
     <sys:String x:Key="WindowScreenTypeCursor">滑鼠游標所在顯示器</sys:String>
-    <sys:String x:Key="WindowScreenTypeFollowMouseOnHotkey">熱鍵喚醒時跟隨滑鼠</sys:String>
+    <sys:String x:Key="WindowScreenTypeFollowMouse">跟隨滑鼠</sys:String>
     <sys:String x:Key="WindowScreenTypeFocus">焦點視窗所在顯示器</sys:String>
     <sys:String x:Key="WindowScreenTypePrimary">主顯示器</sys:String>
     <sys:String x:Key="WindowScreenTypeCustom">自訂顯示器</sys:String>
