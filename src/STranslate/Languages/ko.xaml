@@ -314,6 +314,9 @@
     <sys:String x:Key="UserDataLocation">사용자 데이터 위치</sys:String>
     <sys:String x:Key="UserDataLocationDescription">사용자 설정 및 설치된 플러그인은 사용자 데이터 폴더에 저장됩니다. 이 위치는 포터블 모드 여부에 따라 다를 수 있습니다.</sys:String>
     <sys:String x:Key="OpenDirectory">디렉터리 열기</sys:String>
+    <sys:String x:Key="PortableModeDescription">사용자 데이터 저장 위치를 앱 폴더와 로밍 프로필 사이에서 전환합니다. 전환하면 데이터가 이동되고 앱이 자동으로 다시 시작됩니다.</sys:String>
+    <sys:String x:Key="PortableModeStatePortable">포터블 모드</sys:String>
+    <sys:String x:Key="PortableModeStateRoaming">로밍 모드</sys:String>
     <sys:String x:Key="EnablePortableMode">포터블 모드 활성화</sys:String>
     <sys:String x:Key="DisablePortableMode">포터블 모드 비활성화</sys:String>
     <sys:String x:Key="ConfirmRestartAndEnablePortableMode">재시작 후 포터블 모드를 활성화하시겠습니까?</sys:String>
@@ -324,7 +327,6 @@
     <sys:String x:Key="PortableModeEnableFailed">포터블 모드 활성화에 실패했습니다</sys:String>
     <sys:String x:Key="PortableModeDisableFailed">포터블 모드 비활성화에 실패했습니다</sys:String>
     <sys:String x:Key="PortableModeHostStartFailed">포터블 모드 작업 시작 실패: {0}</sys:String>
-    <sys:String x:Key="DeveloperTools">개발자 도구</sys:String>
     <sys:String x:Key="ClearCache">캐시 삭제</sys:String>
     <sys:String x:Key="ClearLogs">로그 삭제</sys:String>
     <sys:String x:Key="SettingsDirectory">설정 디렉터리</sys:String>

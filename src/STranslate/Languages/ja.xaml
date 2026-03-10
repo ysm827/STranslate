@@ -314,6 +314,9 @@
     <sys:String x:Key="UserDataLocation">ユーザーデータの場所</sys:String>
     <sys:String x:Key="UserDataLocationDescription">ユーザー設定とインストール済みプラグインはユーザーデータフォルダに保存されます。この場所はポータブルモードかどうかによって異なる場合があります。</sys:String>
     <sys:String x:Key="OpenDirectory">ディレクトリを開く</sys:String>
+    <sys:String x:Key="PortableModeDescription">ユーザーデータの保存先をアプリフォルダとローミングプロファイルの間で切り替えます。切り替えるとデータが移行され、アプリが自動的に再起動します。</sys:String>
+    <sys:String x:Key="PortableModeStatePortable">ポータブルモード</sys:String>
+    <sys:String x:Key="PortableModeStateRoaming">ローミングモード</sys:String>
     <sys:String x:Key="EnablePortableMode">ポータブルモードを有効化</sys:String>
     <sys:String x:Key="DisablePortableMode">ポータブルモードを無効化</sys:String>
     <sys:String x:Key="ConfirmRestartAndEnablePortableMode">再起動してポータブルモードを有効化しますか？</sys:String>
@@ -324,7 +327,6 @@
     <sys:String x:Key="PortableModeEnableFailed">ポータブルモードの有効化に失敗しました</sys:String>
     <sys:String x:Key="PortableModeDisableFailed">ポータブルモードの無効化に失敗しました</sys:String>
     <sys:String x:Key="PortableModeHostStartFailed">ポータブルモード処理の起動に失敗しました: {0}</sys:String>
-    <sys:String x:Key="DeveloperTools">開発ツール</sys:String>
     <sys:String x:Key="ClearCache">キャッシュ削除</sys:String>
     <sys:String x:Key="ClearLogs">ログ削除</sys:String>
     <sys:String x:Key="SettingsDirectory">設定ディレクトリ</sys:String>

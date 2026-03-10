@@ -324,6 +324,9 @@
     <sys:String x:Key="UserDataLocation">User Data Location</sys:String>
     <sys:String x:Key="UserDataLocationDescription">User settings and installed plugins are saved in the user data folder. This location may vary depending on whether it is in portable mode.</sys:String>
     <sys:String x:Key="OpenDirectory">Open Directory</sys:String>
+    <sys:String x:Key="PortableModeDescription">Switch where STranslate stores user data between the app folder and the roaming profile. Changing this will migrate data and restart the app.</sys:String>
+    <sys:String x:Key="PortableModeStatePortable">Portable Mode</sys:String>
+    <sys:String x:Key="PortableModeStateRoaming">Roaming Mode</sys:String>
     <sys:String x:Key="EnablePortableMode">Enable Portable Mode</sys:String>
     <sys:String x:Key="DisablePortableMode">Disable Portable Mode</sys:String>
     <sys:String x:Key="ConfirmRestartAndEnablePortableMode">Confirm restart and enable portable mode?</sys:String>
@@ -334,7 +337,6 @@
     <sys:String x:Key="PortableModeEnableFailed">Failed to enable portable mode</sys:String>
     <sys:String x:Key="PortableModeDisableFailed">Failed to disable portable mode</sys:String>
     <sys:String x:Key="PortableModeHostStartFailed">Failed to start portable mode operation: {0}</sys:String>
-    <sys:String x:Key="DeveloperTools">Developer Tools</sys:String>
     <sys:String x:Key="ClearCache">Clear Cache</sys:String>
     <sys:String x:Key="ClearLogs">Clear Logs</sys:String>
     <sys:String x:Key="SettingsDirectory">Settings Directory</sys:String>

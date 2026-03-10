@@ -38,30 +38,6 @@
                     </ui:SettingsCard.HeaderIcon>
                     <ikw:SimpleStackPanel Orientation="Horizontal" Spacing="12">
                         <Button Command="{Binding LocateUserDataCommand}" Content="{DynamicResource OpenDirectory}" />
-                        <Button
-                            Command="{Binding TogglePortableModeCommand}"
-                            Content="{DynamicResource EnablePortableMode}"
-                            Visibility="{Binding IsPortableMode, Converter={cnvt:BoolToVisibilityInverseConverter}}" />
-                        <Button
-                            Command="{Binding TogglePortableModeCommand}"
-                            Content="{DynamicResource DisablePortableMode}"
-                            Visibility="{Binding IsPortableMode, Converter={cnvt:BoolToVisibilityConverter}}" />
-                    </ikw:SimpleStackPanel>
-                </ui:SettingsCard>
-
-                <ui:SettingsCard Header="{DynamicResource DeveloperTools}">
-                    <ui:SettingsCard.HeaderIcon>
-                        <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.Toolbox_24_Regular}" />
-                    </ui:SettingsCard.HeaderIcon>
-                    <ikw:SimpleStackPanel Orientation="Horizontal" Spacing="12">
-                        <Button
-                            Content="{DynamicResource ClearCache}"
-                            IsEnabled="False"
-                            Visibility="Collapsed" />
-                        <Button
-                            Content="{DynamicResource ClearLogs}"
-                            IsEnabled="False"
-                            Visibility="Collapsed" />
                         <Button>
                             <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.FolderSearch_24_Regular}" />
                             <ui:FlyoutService.Flyout>
@@ -86,6 +62,40 @@
                                 </ui:MenuFlyout>
                             </ui:FlyoutService.Flyout>
                         </Button>
+                    </ikw:SimpleStackPanel>
+                </ui:SettingsCard>
+
+                <ui:SettingsCard Description="{DynamicResource PortableModeDescription}">
+                    <ui:SettingsCard.Style>
+                        <Style BasedOn="{StaticResource {x:Type ui:SettingsCard}}" TargetType="ui:SettingsCard">
+                            <Setter Property="Header" Value="{DynamicResource PortableModeStateRoaming}" />
+                            <Setter Property="HeaderIcon">
+                                <Setter.Value>
+                                    <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.Globe_24_Regular}" />
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsPortableMode}" Value="True">
+                                    <Setter Property="Header" Value="{DynamicResource PortableModeStatePortable}" />
+                                    <Setter Property="HeaderIcon">
+                                        <Setter.Value>
+                                            <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.Box_24_Regular}" />
+                                        </Setter.Value>
+                                    </Setter>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ui:SettingsCard.Style>
+
+                    <ikw:SimpleStackPanel Orientation="Horizontal" Spacing="12">
+                        <Button
+                            Command="{Binding TogglePortableModeCommand}"
+                            Content="{DynamicResource EnablePortableMode}"
+                            Visibility="{Binding IsPortableMode, Converter={cnvt:BoolToVisibilityInverseConverter}}" />
+                        <Button
+                            Command="{Binding TogglePortableModeCommand}"
+                            Content="{DynamicResource DisablePortableMode}"
+                            Visibility="{Binding IsPortableMode, Converter={cnvt:BoolToVisibilityConverter}}" />
                     </ikw:SimpleStackPanel>
                 </ui:SettingsCard>
 

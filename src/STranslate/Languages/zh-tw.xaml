@@ -324,6 +324,9 @@
     <sys:String x:Key="UserDataLocation">使用者資料位置</sys:String>
     <sys:String x:Key="UserDataLocationDescription">使用者設定和已安裝的外掛儲存在使用者資料資料夾中。此位置可能因是否處於便攜模式而異。</sys:String>
     <sys:String x:Key="OpenDirectory">開啟目錄</sys:String>
+    <sys:String x:Key="PortableModeDescription">在程式目錄與系統漫遊目錄之間切換使用者資料儲存位置。切換後會搬移資料並自動重新啟動應用程式。</sys:String>
+    <sys:String x:Key="PortableModeStatePortable">便攜模式</sys:String>
+    <sys:String x:Key="PortableModeStateRoaming">漫遊模式</sys:String>
     <sys:String x:Key="EnablePortableMode">啟用便攜模式</sys:String>
     <sys:String x:Key="DisablePortableMode">關閉便攜模式</sys:String>
     <sys:String x:Key="ConfirmRestartAndEnablePortableMode">是否確認重啟並啟用便攜模式</sys:String>
@@ -334,7 +337,6 @@
     <sys:String x:Key="PortableModeEnableFailed">便攜模式啟用失敗</sys:String>
     <sys:String x:Key="PortableModeDisableFailed">便攜模式關閉失敗</sys:String>
     <sys:String x:Key="PortableModeHostStartFailed">便攜模式操作啟動失敗：{0}</sys:String>
-    <sys:String x:Key="DeveloperTools">開發工具</sys:String>
     <sys:String x:Key="ClearCache">清理快取</sys:String>
     <sys:String x:Key="ClearLogs">清理日誌</sys:String>
     <sys:String x:Key="SettingsDirectory">設定目錄</sys:String>
