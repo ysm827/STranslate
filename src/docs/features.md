@@ -8,8 +8,46 @@
 | 软件内热键 | 仅在应用聚焦时生效的快捷键 |
 | 按住触发键 | 按住特定键时临时激活功能 |
 | 剪贴板监听 | 监听剪贴板变化并自动翻译 |
+| 图片翻译 OCR 专用服务 | 为图片翻译单独指定 OCR 引擎，和全局 OCR 配置解耦 |
 | 历史记录 | SQLite 存储翻译历史，支持搜索、导出、收藏 |
 | 插件市场 | 内置插件市场，支持搜索、下载、升级插件 |
+
+## 图片翻译 OCR 专用服务
+
+图片翻译场景支持独立的 OCR 服务绑定，不再与“全局 OCR 启用项”强耦合。
+
+### 配置入口
+
+- 进入 `设置 -> 服务 -> 文本识别`
+- 顶部新增“图片翻译 OCR 服务”卡片
+- 可通过以下方式设置：
+  - 将左侧 OCR 服务拖拽到卡片区域
+  - 在服务卡片右键选择“设为图片翻译OCR服务”
+  - 在图片翻译窗口底部 OCR 下拉框直接切换
+
+### 运行规则
+
+图片翻译执行 OCR 时按以下优先级取用服务：
+
+1. 优先使用 `ImageTranslateOcrService`
+2. 若未配置专用服务，回退到当前“全局启用”的 OCR 服务
+3. 若两者都不可用，提示用户并跳转到“设置 -> 服务 -> 文本识别”
+
+### 行为说明
+
+- 图片翻译窗口下拉框绑定的是 `ImageTranslateOcrService`，切换后会持久化保存
+- 在图片翻译窗口切换 OCR 不会修改服务列表中的 `IsEnabled`（不影响全局 OCR 选择）
+- 普通 OCR、静默 OCR、二维码识别仍沿用全局 OCR 启用逻辑
+
+### 相关实现文件
+
+| 文件 | 用途 |
+|------|------|
+| `STranslate/Core/ServiceSettings.cs` | 新增 `ImageTranslateOcrSvcID` 持久化字段 |
+| `STranslate/Services/OcrService.cs` | 专用 OCR 服务绑定、回退选择与删除联动 |
+| `STranslate/ViewModels/ImageTranslateWindowViewModel.cs` | 图片翻译窗口 OCR 下拉与专用服务双向同步 |
+| `STranslate/ViewModels/MainWindowViewModel.cs` | 图片翻译入口统一采用“专用优先、全局回退”逻辑 |
+| `STranslate/Views/Pages/OcrPage.xaml` | OCR 设置页新增“图片翻译 OCR 服务”卡片与拖拽目标 |
 
 ## 热键系统
 
