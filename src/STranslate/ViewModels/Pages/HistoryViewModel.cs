@@ -28,7 +28,7 @@ public partial class HistoryViewModel : ObservableObject, IDisposable
 
     private bool CanLoadMore =>
         !_isLoading &&
-        string.IsNullOrEmpty(SearchText) &&
+        string.IsNullOrWhiteSpace(SearchText) &&
         (TotalCount == 0 || _items.Count != TotalCount);
 
     [ObservableProperty] public partial string SearchText { get; set; } = string.Empty;
@@ -61,7 +61,7 @@ public partial class HistoryViewModel : ObservableObject, IDisposable
         _searchDebouncer = new();
 
         HistoryItems = _items.ToNotifyCollectionChanged();
-        SelectedItems.CollectionChanged += (in NotifyCollectionChangedEventArgs<object> _) => OnPropertyChanged(nameof(CanExportHistory));
+        SelectedItems.CollectionChanged += OnSelectedItemsCollectionChanged;
 
         _ = RefreshAsync();
     }
@@ -72,13 +72,16 @@ public partial class HistoryViewModel : ObservableObject, IDisposable
     partial void OnSearchTextChanged(string value) =>
         _searchDebouncer.ExecuteAsync(SearchAsync, TimeSpan.FromMilliseconds(searchDelayMilliseconds));
 
+    private void OnSelectedItemsCollectionChanged(in NotifyCollectionChangedEventArgs<object> _)
+        => OnPropertyChanged(nameof(CanExportHistory));
+
     private async Task SearchAsync()
     {
         _searchCts?.Cancel();
         _searchCts?.Dispose();
         _searchCts = new CancellationTokenSource();
 
-        if (string.IsNullOrEmpty(SearchText))
+        if (string.IsNullOrWhiteSpace(SearchText))
         {
             await RefreshAsync();
             return;
@@ -108,43 +111,23 @@ public partial class HistoryViewModel : ObservableObject, IDisposable
             SelectedItem = null;
             ClearItems();
         });
-        _lastCursorTime = DateTime.Now;
 
+        if (TotalCount == 0)
+            return;
+
+        _lastCursorTime = DateTime.Now;
         await LoadMoreAsync();
     }
 
     [RelayCommand]
     private async Task DeleteAsync(HistoryModel historyModel)
     {
-        if (await new ContentDialog
-        {
-            Title = _i18n.GetTranslation("Prompt"),
-            CloseButtonText = _i18n.GetTranslation("Cancel"),
-            PrimaryButtonText = _i18n.GetTranslation("Confirm"),
-            DefaultButton = ContentDialogButton.Primary,
-            Content = string.Format(_i18n.GetTranslation("BatchDeleteHistoryConfirm"), "1"),
-        }.ShowAsync() != ContentDialogResult.Primary)
+        if (!await ConfirmDeleteAsync(1, "BatchDeleteHistoryConfirm"))
         {
             return;
         }
-        var success = await _sqlService.DeleteDataAsync(historyModel);
-        if (success)
-        {
-            App.Current.Dispatcher.Invoke(() =>
-            {
-                var item = _items.FirstOrDefault(i => i.Id == historyModel.Id);
-                if (item != null)
-                    RemoveItem(item);
-                if (SelectedItem?.Id == historyModel.Id)
-                {
-                    SelectedListItem = null;
-                    SelectedItem = null;
-                }
-            });
-            TotalCount--;
-        }
-        else
-            _snackbar.ShowError(_i18n.GetTranslation("OperationFailed"));
+
+        await DeleteSingleHistoryAsync(historyModel, showFailureToast: true);
     }
 
     [RelayCommand]
@@ -167,9 +150,11 @@ public partial class HistoryViewModel : ObservableObject, IDisposable
 
             App.Current.Dispatcher.Invoke(() =>
             {
-                // 更新游标
                 _lastCursorTime = historyData.Last().Time;
-                var uniqueHistoryItems = historyData.Where(h => !_items.Any(existing => existing.Id == h.Id));
+                var uniqueHistoryItems = historyData
+                    .Where(h => !_items.Any(existing => existing.Id == h.Id))
+                    .ToList();
+
                 AddItems(uniqueHistoryItems);
             });
         }
@@ -181,34 +166,99 @@ public partial class HistoryViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    private void ToggleSelectAll()
-    {
-        if (_items.Count == 0) return;
-
-        if (SelectedItems.Count == _items.Count)
-            SelectedItems.Clear();
-        else
-        {
-            SelectedItems.Clear();
-            SelectedItems.AddRange(_items);
-        }
-    }
-
-    [RelayCommand]
     private async Task ExportHistoryAsync()
     {
-        var selected = SelectedItems.Cast<HistoryModel>().ToList();
+        var selected = GetSelectedItems();
 
         if (selected.Count == 0)
         {
-            _snackbar.Show(
-                _i18n.GetTranslation("NoHistorySelected"),
-                Severity.Warning,
-                actionText: _i18n.GetTranslation("SelectAll"),
-                actionCallback: ToggleSelectAll);
+            _snackbar.Show(_i18n.GetTranslation("NoHistorySelected"), Severity.Warning);
             return;
         }
 
+        await ExportItemsAsync(selected, clearSelection: true);
+    }
+
+    [RelayCommand]
+    private async Task ExportAllHistoryAsync()
+    {
+        var allItems = (await _sqlService.GetDataAsync()).ToList();
+        if (allItems.Count == 0)
+        {
+            _snackbar.Show(_i18n.GetTranslation("NoHistorySelected"), Severity.Warning);
+            return;
+        }
+
+        await ExportItemsAsync(allItems, clearSelection: false);
+    }
+
+    [RelayCommand]
+    private async Task DeleteSelectedHistoryAsync()
+    {
+        var selected = GetSelectedItems();
+        if (selected.Count == 0)
+        {
+            _snackbar.Show(_i18n.GetTranslation("NoHistorySelected"), Severity.Warning);
+            return;
+        }
+
+        if (!await ConfirmDeleteAsync(selected.Count, "BatchDeleteHistoryConfirm"))
+        {
+            return;
+        }
+
+        var successCount = 0;
+        var failCount = 0;
+
+        foreach (var item in selected)
+        {
+            if (await DeleteSingleHistoryAsync(item, showFailureToast: false))
+                successCount++;
+            else
+                failCount++;
+        }
+
+        ShowBatchDeleteSummary(successCount, failCount);
+    }
+
+    [RelayCommand]
+    private async Task DeleteAllHistoryAsync()
+    {
+        var totalCount = await _sqlService.GetCountAsync();
+        if (totalCount <= 0)
+        {
+            _snackbar.Show(_i18n.GetTranslation("NoHistorySelected"), Severity.Warning);
+            return;
+        }
+
+        if (!await ConfirmDeleteAsync(totalCount, "DeleteAllHistoryConfirm"))
+        {
+            return;
+        }
+
+        var success = await _sqlService.DeleteAllDataAsync();
+        if (!success)
+        {
+            _snackbar.ShowError(_i18n.GetTranslation("OperationFailed"));
+            return;
+        }
+
+        App.Current.Dispatcher.Invoke(() =>
+        {
+            SelectedListItem = null;
+            SelectedItem = null;
+            ClearItems();
+        });
+
+        TotalCount = 0;
+        _lastCursorTime = DateTime.Now;
+        LoadMoreCommand.NotifyCanExecuteChanged();
+
+        _snackbar.ShowSuccess(string.Format(_i18n.GetTranslation("BatchDeleteHistoryResult"), totalCount, 0));
+    }
+
+    private async Task ExportItemsAsync(IReadOnlyCollection<HistoryModel> items, bool clearSelection)
+    {
         var saveFileDialog = new SaveFileDialog
         {
             Title = _i18n.GetTranslation("SaveAs"),
@@ -227,8 +277,8 @@ public partial class HistoryViewModel : ObservableObject, IDisposable
             {
                 app = Constant.AppName,
                 exportedAt = DateTimeOffset.Now,
-                count = selected.Count,
-                items = selected.Select(h => new
+                count = items.Count,
+                items = items.Select(h => new
                 {
                     id = h.Id,
                     time = h.Time,
@@ -244,10 +294,11 @@ public partial class HistoryViewModel : ObservableObject, IDisposable
             var json = JsonSerializer.Serialize(export, HistoryModel.JsonOption);
             await File.WriteAllTextAsync(saveFileDialog.FileName, json, Encoding.UTF8);
 
-            var directory = Path.GetDirectoryName(saveFileDialog.FileName);
             _snackbar.ShowSuccess(_i18n.GetTranslation("ExportSuccess"));
-
-            SelectedItems.Clear();
+            if (clearSelection)
+            {
+                SelectedItems.Clear();
+            }
         }
         catch (Exception ex)
         {
@@ -255,38 +306,66 @@ public partial class HistoryViewModel : ObservableObject, IDisposable
         }
     }
 
-    [RelayCommand]
-    private async Task DeleteSelectedHistoryAsync()
+    private async Task<bool> ConfirmDeleteAsync(long count, string translationKey)
     {
-        var selected = SelectedItems.Cast<HistoryModel>().ToList();
-        if (selected.Count == 0)
-        {
-            _snackbar.Show(
-                _i18n.GetTranslation("NoHistorySelected"),
-                Severity.Warning,
-                actionText: _i18n.GetTranslation("SelectAll"),
-                actionCallback: ToggleSelectAll);
-            return;
-        }
-
-        if (await new ContentDialog
+        return await new ContentDialog
         {
             Title = _i18n.GetTranslation("Prompt"),
             CloseButtonText = _i18n.GetTranslation("Cancel"),
             PrimaryButtonText = _i18n.GetTranslation("Confirm"),
             DefaultButton = ContentDialogButton.Primary,
-            Content = string.Format(_i18n.GetTranslation("BatchDeleteHistoryConfirm"), selected.Count),
-        }.ShowAsync() != ContentDialogResult.Primary)
+            Content = string.Format(_i18n.GetTranslation(translationKey), count),
+        }.ShowAsync() == ContentDialogResult.Primary;
+    }
+
+    private async Task<bool> DeleteSingleHistoryAsync(HistoryModel historyModel, bool showFailureToast)
+    {
+        var success = await _sqlService.DeleteDataAsync(historyModel);
+        if (!success)
         {
-            return;
+            if (showFailureToast)
+            {
+                _snackbar.ShowError(_i18n.GetTranslation("OperationFailed"));
+            }
+
+            return false;
         }
 
-        var totalCountBefore = TotalCount;
-        foreach (var item in selected)
-            await DeleteAsync(item);
+        App.Current.Dispatcher.Invoke(() =>
+        {
+            var item = _items.FirstOrDefault(i => i.Id == historyModel.Id);
+            if (item != null)
+                RemoveItem(item);
 
-        if (TotalCount == totalCountBefore - selected.Count)
-            _snackbar.ShowSuccess(_i18n.GetTranslation("OperationSuccess"));
+            if (SelectedItem?.Id == historyModel.Id)
+            {
+                SelectedListItem = null;
+                SelectedItem = null;
+            }
+        });
+
+        TotalCount = Math.Max(0, TotalCount - 1);
+        return true;
+    }
+
+    private void ShowBatchDeleteSummary(int successCount, int failCount)
+    {
+        var message = string.Format(_i18n.GetTranslation("BatchDeleteHistoryResult"), successCount, failCount);
+
+        if (successCount > 0 && failCount == 0)
+            _snackbar.ShowSuccess(message);
+        else if (successCount > 0)
+            _snackbar.Show(message, Severity.Warning);
+        else
+            _snackbar.ShowError(message);
+    }
+
+    private List<HistoryModel> GetSelectedItems()
+    {
+        return SelectedItems
+            .OfType<HistoryModel>()
+            .DistinctBy(h => h.Id)
+            .ToList();
     }
 
     private void AddItems(IEnumerable<HistoryModel> models)
@@ -310,5 +389,6 @@ public partial class HistoryViewModel : ObservableObject, IDisposable
     {
         _searchDebouncer.Dispose();
         _searchCts?.Dispose();
+        SelectedItems.CollectionChanged -= OnSelectedItemsCollectionChanged;
     }
 }

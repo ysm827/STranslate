@@ -308,7 +308,14 @@
     <sys:String x:Key="ExportHistory">履歴をエクスポート</sys:String>
     <sys:String x:Key="BatchDeleteHistory">履歴を一括削除</sys:String>
     <sys:String x:Key="BatchDeleteHistoryConfirm">選択した {0} 件の履歴を削除しますか？</sys:String>
+    <sys:String x:Key="BatchDeleteHistoryResult">一括削除完了: 成功 {0} 件、失敗 {1} 件</sys:String>
+    <sys:String x:Key="DeleteAllHistoryConfirm">すべての履歴 {0} 件を削除しますか？</sys:String>
+    <sys:String x:Key="AllHistoryActions">全件操作</sys:String>
+    <sys:String x:Key="DeleteAllHistory">すべて削除</sys:String>
+    <sys:String x:Key="ExportAllHistory">すべてエクスポート</sys:String>
     <sys:String x:Key="HistorySelectAllOrClear">すべて選択/解除</sys:String>
+
+
     <sys:String x:Key="NoHistorySelected">履歴が選択されていません</sys:String>
     <sys:String x:Key="ExportSuccess">エクスポート成功</sys:String>
     <sys:String x:Key="ExportFailed">エクスポート失敗</sys:String>

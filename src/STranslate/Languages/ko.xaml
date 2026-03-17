@@ -308,7 +308,14 @@
     <sys:String x:Key="ExportHistory">기록 내보내기</sys:String>
     <sys:String x:Key="BatchDeleteHistory">기록 일괄 삭제</sys:String>
     <sys:String x:Key="BatchDeleteHistoryConfirm">선택한 기록 {0}개를 삭제하시겠습니까?</sys:String>
+    <sys:String x:Key="BatchDeleteHistoryResult">일괄 삭제 완료: 성공 {0}개, 실패 {1}개</sys:String>
+    <sys:String x:Key="DeleteAllHistoryConfirm">전체 기록 {0}개를 삭제하시겠습니까?</sys:String>
+    <sys:String x:Key="AllHistoryActions">전체 작업</sys:String>
+    <sys:String x:Key="DeleteAllHistory">전체 삭제</sys:String>
+    <sys:String x:Key="ExportAllHistory">전체 내보내기</sys:String>
     <sys:String x:Key="HistorySelectAllOrClear">모두 선택/해제</sys:String>
+
+
     <sys:String x:Key="NoHistorySelected">선택된 기록이 없습니다</sys:String>
     <sys:String x:Key="ExportSuccess">내보내기 성공</sys:String>
     <sys:String x:Key="ExportFailed">내보내기 실패</sys:String>

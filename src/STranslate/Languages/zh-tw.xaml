@@ -317,7 +317,14 @@
     <sys:String x:Key="ExportHistory">匯出紀錄</sys:String>
     <sys:String x:Key="BatchDeleteHistory">批量刪除紀錄</sys:String>
     <sys:String x:Key="BatchDeleteHistoryConfirm">確定要刪除選取的 {0} 筆紀錄嗎？</sys:String>
+    <sys:String x:Key="BatchDeleteHistoryResult">批次刪除完成：成功 {0} 條，失敗 {1} 條</sys:String>
+    <sys:String x:Key="DeleteAllHistoryConfirm">確定要刪除全部 {0} 筆紀錄嗎？</sys:String>
+    <sys:String x:Key="AllHistoryActions">全部操作</sys:String>
+    <sys:String x:Key="DeleteAllHistory">刪除全部</sys:String>
+    <sys:String x:Key="ExportAllHistory">匯出全部</sys:String>
     <sys:String x:Key="HistorySelectAllOrClear">全選/取消</sys:String>
+
+
     <sys:String x:Key="NoHistorySelected">尚未選擇任何紀錄</sys:String>
     <sys:String x:Key="ExportSuccess">匯出成功</sys:String>
     <sys:String x:Key="ExportFailed">匯出失敗</sys:String>

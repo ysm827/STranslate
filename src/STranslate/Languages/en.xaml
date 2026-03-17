@@ -317,6 +317,11 @@
     <sys:String x:Key="ExportHistory">Export History</sys:String>
     <sys:String x:Key="BatchDeleteHistory">Batch Delete History</sys:String>
     <sys:String x:Key="BatchDeleteHistoryConfirm">Are you sure you want to delete the selected {0} history records?</sys:String>
+    <sys:String x:Key="BatchDeleteHistoryResult">Batch delete finished: {0} succeeded, {1} failed</sys:String>
+    <sys:String x:Key="DeleteAllHistoryConfirm">Are you sure you want to delete all {0} history records?</sys:String>
+    <sys:String x:Key="AllHistoryActions">All actions</sys:String>
+    <sys:String x:Key="DeleteAllHistory">Delete All</sys:String>
+    <sys:String x:Key="ExportAllHistory">Export All</sys:String>
     <sys:String x:Key="HistorySelectAllOrClear">Select All / Clear</sys:String>
     <sys:String x:Key="NoHistorySelected">No history selected</sys:String>
     <sys:String x:Key="ExportSuccess">Export succeeded</sys:String>
