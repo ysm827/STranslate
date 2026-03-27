@@ -371,7 +371,9 @@ public partial class App : ISingleInstanceApp, INavigation, IDisposable
                 UACHelper.Create();
             }
 
-            UACHelper.Run(mode);
+            // https://github.com/STranslate/STranslate/issues/661
+            // 尝试加3s延时避免软件未完全退出 Host进程拉起引发其他问题
+            UACHelper.Run(mode, 3);
             return true;
         }
         catch (Exception ex)
