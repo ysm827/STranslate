@@ -8,15 +8,15 @@ using System.Windows.Controls;
 
 namespace STranslate.Plugin.Translate.MicrosoftBuiltIn;
 
-public class Main : TranslatePluginBase
+公共 class Main : TranslatePluginBase
 {
     private Control? _settingUi;
     private SettingsViewModel? _viewModel;
     private Settings Settings { get; set; } = null!;
     private IPluginContext Context { get; set; } = null!;
 
-    private const string Url = "https://st-ms.deno.dev/translate";
-    private const string ApiEndpoint = "api.cognitive.microsofttranslator.com";
+    private const string AuthUrl = "https://edge.microsoft.com/translate/auth";
+    private const string ApiEndpoint = "api-edge.cognitive.microsofttranslator.com";
     private const string ApiVersion = "3.0";
     private const int MaxTextLength = 1000;
 
@@ -78,15 +78,15 @@ public class Main : TranslatePluginBase
         LangEnum.Japanese => "ja",
         LangEnum.Korean => "ko",
         LangEnum.French => "fr",
-        LangEnum.Spanish => "es",
-        LangEnum.Russian => "ru",
-        LangEnum.German => "de",
+        LangEnum.Spanish => "es"，
+        LangEnum.Russian => "ru"，
+        LangEnum.German => "de"，
         LangEnum.Italian => "it",
         LangEnum.Turkish => "tr",
         LangEnum.PortuguesePortugal => "pt-pt",
         LangEnum.PortugueseBrazil => "pt",
         LangEnum.Vietnamese => "vi",
-        LangEnum.Indonesian => "id",
+        LangEnum.Indonesian => "id"，
         LangEnum.Thai => "th",
         LangEnum.Malay => "ms",
         LangEnum.Arabic => "ar",
@@ -125,20 +125,21 @@ public class Main : TranslatePluginBase
             return;
         }
 
-
-        string url = $"{ApiEndpoint}/translate?api-version={ApiVersion}&to={targetStr}";
+        var token = await Context.HttpService.GetAsync(AuthUrl, new Options(), cancellationToken);
+        token = token.Trim().Trim('"');
+        
+        string url = $"https://{ApiEndpoint}/translate?api-version={ApiVersion}&to={targetStr}";
         if (!string.IsNullOrEmpty(sourceStr))
         {
             url += $"&from={sourceStr}";
         }
-
+        
         var content = new[] { new { request.Text } };
         var options = new Options
         {
             Headers = new Dictionary<string, string>
             {
-                { "User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36" },
-                { "X-MT-Signature", GetSignature(url) }
+                { "Authorization", $"Bearer {token}" }
             }
         };
 
