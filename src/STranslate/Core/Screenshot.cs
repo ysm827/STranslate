@@ -6,7 +6,7 @@ namespace STranslate.Core;
 
 public class Screenshot(Settings settings) : IScreenshot
 {
-    private const int DefaultCaptureDelayMs = 100;
+    private const int DefaultCaptureDelayMs = 150;
 
     public Bitmap? GetScreenshot()
     {
