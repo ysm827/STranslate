@@ -6,6 +6,110 @@
     xmlns:ikw="http://schemas.inkore.net/lib/ui/wpf"
     xmlns:ui="http://schemas.inkore.net/lib/ui/wpf/modern">
 
+    <Style
+        x:Key="IdentifiedLanguageComboBoxStyle"
+        BasedOn="{StaticResource {x:Type ComboBox}}"
+        TargetType="ComboBox">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Foreground" Value="{DynamicResource {x:Static ui:ThemeKeys.TextFillColorPrimaryBrushKey}}" />
+        <Setter Property="HorizontalAlignment" Value="Left" />
+        <Setter Property="HorizontalContentAlignment" Value="Left" />
+        <Setter Property="Height" Value="Auto" />
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="ScrollViewer.CanContentScroll" Value="True" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ComboBox">
+                    <Grid>
+                        <ToggleButton
+                            x:Name="ToggleButton"
+                            HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                            Background="Transparent"
+                            BorderBrush="Transparent"
+                            BorderThickness="0"
+                            Focusable="False"
+                            FontFamily="{TemplateBinding FontFamily}"
+                            FontSize="{TemplateBinding FontSize}"
+                            FontWeight="{TemplateBinding FontWeight}"
+                            Foreground="{TemplateBinding Foreground}"
+                            IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+                            <ToggleButton.Template>
+                                <ControlTemplate TargetType="ToggleButton">
+                                    <Border
+                                        x:Name="ContentBorder"
+                                        Padding="4,2"
+                                        Background="Transparent"
+                                        CornerRadius="{DynamicResource {x:Static ui:ThemeKeys.ControlCornerRadiusKey}}">
+                                        <TextBlock
+                                            x:Name="ContentText"
+                                            HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                            VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                            FontFamily="{TemplateBinding FontFamily}"
+                                            FontSize="{TemplateBinding FontSize}"
+                                            FontWeight="{TemplateBinding FontWeight}"
+                                            Foreground="{TemplateBinding Foreground}"
+                                            Text="{Binding Tag, RelativeSource={RelativeSource AncestorType=ComboBox}}" />
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <!--  鼠标悬浮时的背景色  -->
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="ContentBorder" Property="Background" Value="{DynamicResource {x:Static ui:ThemeKeys.SubtleFillColorSecondaryBrushKey}}" />
+                                        </Trigger>
+
+                                        <!--  鼠标按下时的效果：背景色加深，字体颜色变浅  -->
+                                        <Trigger Property="IsPressed" Value="True">
+                                            <Setter TargetName="ContentBorder" Property="Background" Value="{DynamicResource {x:Static ui:ThemeKeys.SubtleFillColorTertiaryBrushKey}}" />
+                                            <Setter TargetName="ContentText" Property="Foreground" Value="{DynamicResource {x:Static ui:ThemeKeys.TextFillColorSecondaryBrushKey}}" />
+                                        </Trigger>
+
+                                        <!--  展开后的效果：保持背景色，字体颜色恢复正常  -->
+                                        <Trigger Property="IsChecked" Value="True">
+                                            <Setter TargetName="ContentBorder" Property="Background" Value="{DynamicResource {x:Static ui:ThemeKeys.SubtleFillColorTertiaryBrushKey}}" />
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </ToggleButton.Template>
+                        </ToggleButton>
+
+                        <Popup
+                            x:Name="Popup"
+                            AllowsTransparency="True"
+                            Focusable="False"
+                            IsOpen="{TemplateBinding IsDropDownOpen}"
+                            Placement="Bottom"
+                            PlacementTarget="{Binding ElementName=ToggleButton}"
+                            PopupAnimation="Fade">
+                            <Border
+                                MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
+                                Margin="0,4,0,0"
+                                Background="{DynamicResource {x:Static ui:ThemeKeys.SolidBackgroundFillColorBaseBrushKey}}"
+                                CornerRadius="6">
+                                <Border
+                                    Padding="4"
+                                    Background="{DynamicResource SettingsCardBackground}"
+                                    BorderBrush="{DynamicResource SettingsCardBorderBrush}"
+                                    BorderThickness="{DynamicResource SettingsCardBorderThickness}"
+                                    CornerRadius="6">
+                                    <ui:ScrollViewerEx MaxHeight="260" CanContentScroll="False">
+                                        <ItemsPresenter />
+                                    </ui:ScrollViewerEx>
+                                </Border>
+                            </Border>
+                        </Popup>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <Style TargetType="{x:Type control:InputControl}">
         <Setter Property="Background" Value="{DynamicResource SettingsCardBackground}" />
         <Setter Property="BorderBrush" Value="{DynamicResource SettingsCardBorderBrush}" />
@@ -24,7 +128,7 @@
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="*" />
-                                <RowDefinition Height="30" />
+                                <RowDefinition Height="Auto" MinHeight="30" />
                             </Grid.RowDefinitions>
                             <TextBox
                                 x:Name="PART_TextBox"
@@ -50,6 +154,7 @@
 
                             <ikw:SimpleStackPanel
                                 Grid.Row="1"
+                                MinHeight="26"
                                 Margin="6,2"
                                 Orientation="Horizontal"
                                 Spacing="4">
@@ -109,12 +214,21 @@
                                     BorderThickness="{DynamicResource {x:Static ui:ThemeKeys.ButtonBorderThemeThicknessKey}}"
                                     CornerRadius="{DynamicResource {x:Static ui:ThemeKeys.ControlCornerRadiusKey}}"
                                     Visibility="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}, Path=IdentifiedLanguage, Converter={cnvt:EqualToVisibilityInverseConverter}}">
-                                    <ikw:SimpleStackPanel Orientation="Horizontal" Spacing="2">
+                                    <ikw:SimpleStackPanel Orientation="Horizontal">
                                         <TextBlock VerticalAlignment="Center" FontSize="{DynamicResource STControlFontSize12}">
                                             <Run Text="{DynamicResource IdentifiedLanguageLabel}" />
                                             <Run Text=": " />
-                                            <Run Text="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}, Path=IdentifiedLanguage}" />
                                         </TextBlock>
+                                        <ComboBox
+                                            x:Name="PART_IdentifiedLanguageComboBox"
+                                            DisplayMemberPath="Display"
+                                            FontSize="{DynamicResource STControlFontSize12}"
+                                            IsEnabled="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}, Path=CanSelectIdentifiedLanguage}"
+                                            ItemsSource="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}, Path=IdentifiedLanguageItemsSource}"
+                                            SelectedValue="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}, Path=SelectedIdentifiedLanguage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                            SelectedValuePath="Value"
+                                            Tag="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}, Path=IdentifiedLanguage}"
+                                            Style="{StaticResource IdentifiedLanguageComboBoxStyle}" />
                                     </ikw:SimpleStackPanel>
                                 </ui:ElevationBorder>
                             </ikw:SimpleStackPanel>

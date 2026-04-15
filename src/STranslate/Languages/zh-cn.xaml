@@ -426,7 +426,6 @@
     <!--  // Input Control //  -->
     <sys:String x:Key="RemoveLineBreak">移除换行</sys:String>
     <sys:String x:Key="RemoveSpace">移除空格</sys:String>
-    <sys:String x:Key="UseSettingLang">识别失败</sys:String>
     <sys:String x:Key="IdentifiedCache">缓存</sys:String>
     <sys:String x:Key="CopyServiceNotFound">未找到第 {0} 项服务</sys:String>
     <sys:String x:Key="CopiedToClipboard">已复制「{0}」结果</sys:String>

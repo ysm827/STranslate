@@ -426,7 +426,6 @@
     <!--  // Input Control //  -->
     <sys:String x:Key="RemoveLineBreak">Remove Line Break</sys:String>
     <sys:String x:Key="RemoveSpace">Remove Space</sys:String>
-    <sys:String x:Key="UseSettingLang">DetectFailed</sys:String>
     <sys:String x:Key="IdentifiedCache">Cache</sys:String>
     <sys:String x:Key="CopyServiceNotFound">Service {0} not found</sys:String>
     <sys:String x:Key="CopiedToClipboard">Copied '{0}' result</sys:String>

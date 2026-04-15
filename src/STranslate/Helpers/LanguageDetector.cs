@@ -44,7 +44,12 @@ public class LanguageDetector
         return (isSuccess, source, GetTargetLanguage(source));
     }
 
-    private static LangEnum GetTargetLanguage(LangEnum source)
+    /// <summary>
+    /// 根据最终源语种解析当前翻译应使用的目标语种。
+    /// </summary>
+    /// <param name="source">实际参与翻译的源语种。</param>
+    /// <returns>当前翻译链路应使用的目标语种。</returns>
+    public static LangEnum GetTargetLanguage(LangEnum source)
     {
         if (_settings.TargetLang != LangEnum.Auto)
             return _settings.TargetLang;

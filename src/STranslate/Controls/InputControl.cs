@@ -1,7 +1,11 @@
+using STranslate.Core;
+using STranslate.Plugin;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Media.Media3D;
 
 namespace STranslate.Controls;
 
@@ -12,6 +16,7 @@ public class InputControl : Control
     private const string PartTextBoxName = "PART_TextBox";
     private const string PartFontSizeHintBorderName = "PART_FontSizeHintBorder";
     private const string PartFontSizeTextName = "PART_FontSizeText";
+    private const string PartIdentifiedLanguageComboBoxName = "PART_IdentifiedLanguageComboBox";
     private const int FontSizeHintAnimationDurationMs = 1200;
 
     #endregion
@@ -49,6 +54,44 @@ public class InputControl : Control
             new FrameworkPropertyMetadata(
                 string.Empty,
                 FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
+
+    public IEnumerable<DropdownDataGeneric<LangEnum>>? IdentifiedLanguageItemsSource
+    {
+        get => (IEnumerable<DropdownDataGeneric<LangEnum>>?)GetValue(IdentifiedLanguageItemsSourceProperty);
+        set => SetValue(IdentifiedLanguageItemsSourceProperty, value);
+    }
+
+    public static readonly DependencyProperty IdentifiedLanguageItemsSourceProperty =
+        DependencyProperty.Register(
+            nameof(IdentifiedLanguageItemsSource),
+            typeof(IEnumerable<DropdownDataGeneric<LangEnum>>),
+            typeof(InputControl));
+
+    public LangEnum SelectedIdentifiedLanguage
+    {
+        get => (LangEnum)GetValue(SelectedIdentifiedLanguageProperty);
+        set => SetValue(SelectedIdentifiedLanguageProperty, value);
+    }
+
+    public static readonly DependencyProperty SelectedIdentifiedLanguageProperty =
+        DependencyProperty.Register(
+            nameof(SelectedIdentifiedLanguage),
+            typeof(LangEnum),
+            typeof(InputControl),
+            new PropertyMetadata(LangEnum.Auto));
+
+    public bool CanSelectIdentifiedLanguage
+    {
+        get => (bool)GetValue(CanSelectIdentifiedLanguageProperty);
+        set => SetValue(CanSelectIdentifiedLanguageProperty, value);
+    }
+
+    public static readonly DependencyProperty CanSelectIdentifiedLanguageProperty =
+        DependencyProperty.Register(
+            nameof(CanSelectIdentifiedLanguage),
+            typeof(bool),
+            typeof(InputControl),
+            new PropertyMetadata(false));
 
     public bool IsIdentify
     {
@@ -215,9 +258,22 @@ public class InputControl : Control
             typeof(ICommand),
             typeof(InputControl));
 
+    public ICommand? SelectIdentifiedLanguageCommand
+    {
+        get => (ICommand?)GetValue(SelectIdentifiedLanguageCommandProperty);
+        set => SetValue(SelectIdentifiedLanguageCommandProperty, value);
+    }
+
+    public static readonly DependencyProperty SelectIdentifiedLanguageCommandProperty =
+        DependencyProperty.Register(
+            nameof(SelectIdentifiedLanguageCommand),
+            typeof(ICommand),
+            typeof(InputControl));
+
     private TextBox? _textBox;
     private Border? _fontSizeHintBorder;
     private TextBlock? _fontSizeText;
+    private ComboBox? _identifiedLanguageComboBox;
     private CommandBinding? _pasteBinding;
 
     public override void OnApplyTemplate()
@@ -232,11 +288,15 @@ public class InputControl : Control
             }
         }
 
+        if (_identifiedLanguageComboBox != null)
+            _identifiedLanguageComboBox.SelectionChanged -= OnIdentifiedLanguageComboBoxSelectionChanged;
+
         base.OnApplyTemplate();
 
         _textBox = GetTemplateChild(PartTextBoxName) as TextBox;
         _fontSizeHintBorder = GetTemplateChild(PartFontSizeHintBorderName) as Border;
         _fontSizeText = GetTemplateChild(PartFontSizeTextName) as TextBlock;
+        _identifiedLanguageComboBox = GetTemplateChild(PartIdentifiedLanguageComboBoxName) as ComboBox;
 
         // 绑定粘贴命令
         if (_textBox != null)
@@ -247,6 +307,9 @@ public class InputControl : Control
             // 添加鼠标滚轮事件处理
             _textBox.PreviewMouseWheel += OnTextBoxPreviewMouseWheel;
         }
+
+        if (_identifiedLanguageComboBox != null)
+            _identifiedLanguageComboBox.SelectionChanged += OnIdentifiedLanguageComboBoxSelectionChanged;
     }
 
     /// <summary>
@@ -418,6 +481,9 @@ public class InputControl : Control
     {
         base.OnMouseLeftButtonDown(e);
 
+        if (IsClickInsideIdentifiedLanguageSelector(e.OriginalSource))
+            return;
+
         if (_textBox != null && !_textBox.IsFocused)
         {
             _textBox.Focus();
@@ -448,4 +514,47 @@ public class InputControl : Control
     /// </summary>
     /// <param name="index"></param>
     public void SetCaretIndex(int index) => _textBox?.CaretIndex = index;
+
+    private void OnIdentifiedLanguageComboBoxSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_identifiedLanguageComboBox == null ||
+            !_identifiedLanguageComboBox.IsDropDownOpen ||
+            !CanSelectIdentifiedLanguage)
+            return;
+
+        if (_identifiedLanguageComboBox.SelectedValue is not LangEnum language || language == LangEnum.Auto)
+            return;
+
+        if (SelectIdentifiedLanguageCommand?.CanExecute(language) != true)
+            return;
+
+        SelectIdentifiedLanguageCommand.Execute(language);
+        _identifiedLanguageComboBox.IsDropDownOpen = false;
+    }
+
+    private bool IsClickInsideIdentifiedLanguageSelector(object? source)
+    {
+        if (_identifiedLanguageComboBox == null || source is not DependencyObject dependencyObject)
+            return false;
+
+        return IsDescendantOf(dependencyObject, _identifiedLanguageComboBox);
+    }
+
+    private static bool IsDescendantOf(DependencyObject? source, DependencyObject? ancestor)
+    {
+        while (source != null)
+        {
+            if (ReferenceEquals(source, ancestor))
+                return true;
+
+            source = source switch
+            {
+                Visual or Visual3D => VisualTreeHelper.GetParent(source),
+                FrameworkContentElement contentElement => contentElement.Parent,
+                _ => LogicalTreeHelper.GetParent(source)
+            };
+        }
+
+        return false;
+    }
 }

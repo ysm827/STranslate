@@ -66,6 +66,10 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         HotkeySettings hotkeySettings)
     {
         DataProvider = dataProvider;
+        IdentifiedLanguageOptions = DataProvider.LangEnums
+            .Where(x => x.Value != LangEnum.Auto)
+            .Cast<DropdownDataGeneric<LangEnum>>()
+            .ToList();
         _logger = logger;
         _i18n = i18n;
         _audioPlayer = audioPlayer;
@@ -87,7 +91,10 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
     private void OnLanguageChanged()
     {
-        if (!UACHelper.IsUserAdministrator()) return;
+        ApplyIdentifiedLanguageState(_identifiedLanguageState);
+
+        if (!UACHelper.IsUserAdministrator())
+            return;
 
         TrayToolTip = $"{Constant.AppName} # {_i18n.GetTranslation("Administrator")}";
     }
@@ -105,6 +112,24 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     /// 等待ContextMenu关闭动画完成的延迟时间（毫秒）
     /// </summary>
     private const int ContextMenuCloseAnimationDelay = 150;
+
+    private enum IdentifiedLanguageStateKind
+    {
+        None,
+        Cache,
+        Detected
+    }
+
+    private sealed record IdentifiedLanguageState(IdentifiedLanguageStateKind Kind, LangEnum? Language = null)
+    {
+        public static IdentifiedLanguageState Empty { get; } = new(IdentifiedLanguageStateKind.None);
+    }
+
+    private sealed record TranslationLanguageContext(
+        LangEnum CacheSource,
+        LangEnum CacheTarget,
+        LangEnum EffectiveSource,
+        LangEnum EffectiveTarget);
 
     [ObservableProperty]
     public partial ImageSource TrayIcon { get; set; } = BitmapImageLoc.AppIcon;
@@ -127,10 +152,22 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SingleTranslateCommand))]
     [NotifyCanExecuteChangedFor(nameof(TranslateCommand))]
+    [NotifyCanExecuteChangedFor(nameof(SelectIdentifiedLanguageCommand))]
     public partial string InputText { get; set; } = string.Empty;
 
     [ObservableProperty]
     public partial string IdentifiedLanguage { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial LangEnum SelectedIdentifiedLanguage { get; set; } = LangEnum.Auto;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SelectIdentifiedLanguageCommand))]
+    public partial bool CanSelectIdentifiedLanguage { get; set; } = false;
+
+    public IReadOnlyList<DropdownDataGeneric<LangEnum>> IdentifiedLanguageOptions { get; }
+
+    private IdentifiedLanguageState _identifiedLanguageState = IdentifiedLanguageState.Empty;
 
     public bool IsTopmost
     {
@@ -158,6 +195,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     public void ExecuteTranslate(string text, string? force = null)
     {
         CancelAllOperations();
+        ResetTranslationLanguageState();
         InputText = text;
         TranslateCommand.Execute(force);
         Show();
@@ -165,19 +203,24 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand(IncludeCancelCommand = true, CanExecute = nameof(CanTranslate))]
-    private async Task TranslateAsync(string? force, CancellationToken cancellationToken)
+    private async Task TranslateAsync(object? force, CancellationToken cancellationToken)
     {
         // 取消防抖执行器中的待执行任务
         _debounceExecutor.Cancel();
 
-        ResetAllServices();
+        LangEnum? forcedSourceLanguage = force is LangEnum language && language != LangEnum.Auto
+            ? language
+            : null;
 
-        IdentifiedLanguage = string.Empty;
+        ResetAllServices();
+        ApplyIdentifiedLanguageState(forcedSourceLanguage.HasValue
+            ? CreateDetectedIdentifiedLanguageState(forcedSourceLanguage.Value)
+            : IdentifiedLanguageState.Empty);
 
         // force 空则优先检查缓存
         var checkCacheFirst = force == null;
 
-        var history = await ExecuteTranslateAsync(checkCacheFirst, cancellationToken);
+        var history = await ExecuteTranslateAsync(checkCacheFirst, forcedSourceLanguage, cancellationToken);
 
         // 翻译后自动复制
         if (Settings.CopyAfterTranslation != CopyAfterTranslation.NoAction)
@@ -249,7 +292,10 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     [RelayCommand(IncludeCancelCommand = true, CanExecute = nameof(CanTranslate))]
     private async Task SingleTranslateAsync(Service service, CancellationToken cancellationToken)
     {
-        var history = await _sqlService.GetDataAsync(InputText, Settings.SourceLang.ToString(), Settings.TargetLang.ToString());
+        var history = await _sqlService.GetDataAsync(
+            InputText,
+            Settings.SourceLang.ToString(),
+            Settings.TargetLang.ToString());
 
         if (service.Plugin is IDictionaryPlugin dictionaryPlugin)
         {
@@ -263,14 +309,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
                 _snackbar.ShowSuccess(string.Format(_i18n.GetTranslation("CopiedToClipboard"), service.DisplayName));
             }
 
-            history ??= new HistoryModel
-            {
-                Time = DateTime.Now,
-                SourceText = InputText,
-                SourceLang = Settings.SourceLang.ToString(),
-                TargetLang = Settings.TargetLang.ToString(),
-                Data = []
-            };
+            history ??= CreateHistoryModel(Settings.SourceLang, Settings.TargetLang);
             // 添加新的历史数据记录并执行字典查询
             history.Data.Add(new(service) { DictResult = result });
             return;
@@ -279,11 +318,9 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         if (service.Plugin is not ITranslatePlugin plugin || plugin.TransResult.IsProcessing)
             return;
 
-        var (_, source, target) = await LanguageDetector
-            .GetLanguageAsync(InputText, cancellationToken, StartProcess, CompleteProcess, FinishProcess)
-            .ConfigureAwait(false);
+        var context = await ResolveTranslationLanguageContextAsync(null, cancellationToken).ConfigureAwait(false);
 
-        var translateResult = await ExecuteAsync(plugin, source, target, cancellationToken).ConfigureAwait(false);
+        var translateResult = await ExecuteAsync(plugin, context.EffectiveSource, context.EffectiveTarget, cancellationToken).ConfigureAwait(false);
         if (!plugin.TransResult.IsSuccess)
             return;
 
@@ -293,15 +330,8 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
             _snackbar.ShowSuccess(string.Format(_i18n.GetTranslation("CopiedToClipboard"), service.DisplayName));
         }
 
-        history ??= new HistoryModel
-        {
-            Time = DateTime.Now,
-            SourceText = InputText,
-            SourceLang = Settings.SourceLang.ToString(),
-            TargetLang = Settings.TargetLang.ToString(),
-            Data = []
-        };
-        ApplyEffectiveLanguages(history, source, target);
+        history ??= CreateHistoryModel(context);
+        ApplyEffectiveLanguages(history, context.EffectiveSource, context.EffectiveTarget);
         // 添加新的历史数据记录
         var historyData = history.GetData(service);
         if (historyData == null)
@@ -314,7 +344,11 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
         if (service.Options?.AutoBackTranslation ?? false)
         {
-            var backResult = await ExecuteBackAsync(plugin, target, source, cancellationToken).ConfigureAwait(false);
+            var backResult = await ExecuteBackAsync(
+                plugin,
+                context.EffectiveTarget,
+                context.EffectiveSource,
+                cancellationToken).ConfigureAwait(false);
             historyData.TransBackResult = backResult;
         }
 
@@ -332,16 +366,21 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         if (service.Plugin is not ITranslatePlugin plugin || plugin.TransBackResult.IsProcessing)
             return;
 
-        var history = await _sqlService.GetDataAsync(InputText, Settings.SourceLang.ToString(), Settings.TargetLang.ToString());
+        var history = await _sqlService.GetDataAsync(
+            InputText,
+            Settings.SourceLang.ToString(),
+            Settings.TargetLang.ToString());
 
-        var (_, source, target) = await LanguageDetector
-            .GetLanguageAsync(InputText, cancellationToken, StartProcess, CompleteProcess, FinishProcess)
-            .ConfigureAwait(false);
+        var context = await ResolveTranslationLanguageContextAsync(null, cancellationToken).ConfigureAwait(false);
 
         if (history != null)
-            ApplyEffectiveLanguages(history, source, target);
+            ApplyEffectiveLanguages(history, context.EffectiveSource, context.EffectiveTarget);
 
-        var backResult = await ExecuteBackAsync(plugin, target, source, cancellationToken).ConfigureAwait(false);
+        var backResult = await ExecuteBackAsync(
+            plugin,
+            context.EffectiveTarget,
+            context.EffectiveSource,
+            cancellationToken).ConfigureAwait(false);
         if (!plugin.TransResult.IsSuccess)
             return;
 
@@ -373,9 +412,20 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         ExecuteTranslate(text);
     }
 
+    [RelayCommand(CanExecute = nameof(CanSelectIdentifiedLanguageForCurrentText))]
+    private async Task SelectIdentifiedLanguageAsync(LangEnum language)
+    {
+        CancelAllOperations();
+
+        TranslateCommand.Execute(language);
+        Show();
+        UpdateCaret();
+        await Task.CompletedTask;
+    }
+
     #region Translation Execution Logic
 
-    private async Task<HistoryModel?> ExecuteTranslateAsync(bool checkCacheFirst, CancellationToken cancellationToken)
+    private async Task<HistoryModel?> ExecuteTranslateAsync(bool checkCacheFirst, LangEnum? forcedSourceLanguage, CancellationToken cancellationToken)
     {
         var enabledSvcs = TranslateService.Services.Where(x => x.IsEnabled && x.Options?.ExecMode == ExecutionMode.Automatic).ToList();
         if (enabledSvcs.Count == 0)
@@ -387,10 +437,13 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         // 尝试从缓存加载
         if (checkCacheFirst && Settings.HistoryLimit > 0)
         {
-            history = await _sqlService.GetDataAsync(InputText, Settings.SourceLang.ToString(), Settings.TargetLang.ToString());
+            history = await _sqlService.GetDataAsync(
+                InputText,
+                Settings.SourceLang.ToString(),
+                Settings.TargetLang.ToString());
             if (history != null)
             {
-                IdentifiedLanguage = _i18n.GetTranslation("IdentifiedCache");
+                ApplyIdentifiedLanguageState(CreateCacheIdentifiedLanguageState(history));
                 uncachedSvcs = await PopulateResultsFromCacheAsync(history, enabledSvcs, cancellationToken);
             }
         }
@@ -402,21 +455,34 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         }
 
         // 对未缓存的服务执行实时翻译
-        var (_, source, target) = await LanguageDetector.GetLanguageAsync(InputText, cancellationToken, StartProcess, CompleteProcess, FinishProcess);
+        var context = await ResolveTranslationLanguageContextAsync(forcedSourceLanguage, cancellationToken);
 
-        history ??= new HistoryModel
+        history ??= CreateHistoryModel(context);
+        ApplyEffectiveLanguages(history, context.EffectiveSource, context.EffectiveTarget);
+
+        await ExecuteTranslationForServicesAsync(
+            uncachedSvcs,
+            context.EffectiveSource,
+            context.EffectiveTarget,
+            history,
+            cancellationToken);
+
+        return history;
+    }
+
+    private HistoryModel CreateHistoryModel(TranslationLanguageContext context)
+        => CreateHistoryModel(context.CacheSource, context.CacheTarget);
+
+    private HistoryModel CreateHistoryModel(LangEnum source, LangEnum target)
+    {
+        return new HistoryModel
         {
             Time = DateTime.Now,
             SourceText = InputText,
-            SourceLang = Settings.SourceLang.ToString(),
-            TargetLang = Settings.TargetLang.ToString(),
+            SourceLang = source.ToString(),
+            TargetLang = target.ToString(),
             Data = []
         };
-        ApplyEffectiveLanguages(history, source, target);
-
-        await ExecuteTranslationForServicesAsync(uncachedSvcs, source, target, history, cancellationToken);
-
-        return history;
     }
 
     private static void ApplyEffectiveLanguages(HistoryModel history, LangEnum source, LangEnum target)
@@ -1123,7 +1189,10 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         else
         {
             // 否则，获取当前输入文本对应的历史记录
-            var current = await _sqlService.GetDataAsync(InputText, Settings.SourceLang.ToString(), Settings.TargetLang.ToString());
+            var current = await _sqlService.GetDataAsync(
+                InputText,
+                Settings.SourceLang.ToString(),
+                Settings.TargetLang.ToString());
             if (current != null)
             {
                 var history = isNext ? await _sqlService.GetNextAsync(current) : await _sqlService.GetPreviousAsync(current);
@@ -1536,6 +1605,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     private void InputClear()
     {
         CancelAllOperations();
+        ResetTranslationLanguageState();
         InputText = string.Empty;
 
         ResetAllServices();
@@ -1615,6 +1685,12 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
     private void OnSettingsPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (e.PropertyName == nameof(Settings.SourceLang) ||
+            e.PropertyName == nameof(Settings.TargetLang))
+        {
+            ResetTranslationLanguageState();
+        }
+
         if (e.PropertyName != nameof(Settings.MainWindowMaxHeightRatio) &&
             e.PropertyName != nameof(Settings.WindowScreen) &&
             e.PropertyName != nameof(Settings.CustomScreenNumber))
@@ -2008,8 +2084,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
     partial void OnInputTextChanged(string value)
     {
-        if (!string.IsNullOrWhiteSpace(IdentifiedLanguage))
-            IdentifiedLanguage = string.Empty;
+        ResetTranslationLanguageState();
 
         if (!Settings.AutoTranslate)
             return;
@@ -2030,6 +2105,79 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
         _debounceExecutor.Execute(Execute, TimeSpan.FromMilliseconds(Settings.AutoTranslateDelayMs));
     }
+
+    private void ResetTranslationLanguageState()
+    {
+        ApplyIdentifiedLanguageState(IdentifiedLanguageState.Empty);
+    }
+
+    private void ApplyIdentifiedLanguageState(IdentifiedLanguageState state)
+    {
+        _identifiedLanguageState = state;
+        SelectedIdentifiedLanguage = state.Language ?? LangEnum.Auto;
+        CanSelectIdentifiedLanguage = state.Kind != IdentifiedLanguageStateKind.None;
+        IdentifiedLanguage = BuildIdentifiedLanguageText(state);
+    }
+
+    private string BuildIdentifiedLanguageText(IdentifiedLanguageState state)
+    {
+        return state.Kind switch
+        {
+            IdentifiedLanguageStateKind.None => string.Empty,
+            IdentifiedLanguageStateKind.Cache => _i18n.GetTranslation("IdentifiedCache"),
+            IdentifiedLanguageStateKind.Detected when state.Language.HasValue => GetLanguageDisplayText(state.Language.Value),
+            _ => string.Empty
+        };
+    }
+
+    private string GetLanguageDisplayText(LangEnum language)
+    {
+        var translation = _i18n.GetTranslation($"LangEnum{language}");
+        return string.IsNullOrWhiteSpace(translation) ? language.ToString() : translation;
+    }
+
+    private bool CanSelectIdentifiedLanguageForCurrentText(LangEnum language)
+    {
+        return CanSelectIdentifiedLanguage &&
+               CanTranslate &&
+               language != LangEnum.Auto;
+    }
+
+    private async Task<TranslationLanguageContext> ResolveTranslationLanguageContextAsync(LangEnum? forcedSourceLanguage, CancellationToken cancellationToken)
+    {
+        if (forcedSourceLanguage is LangEnum forcedSource && forcedSource != LangEnum.Auto)
+        {
+            ApplyIdentifiedLanguageState(CreateDetectedIdentifiedLanguageState(forcedSource));
+            return CreateTranslationLanguageContext(forcedSource, LanguageDetector.GetTargetLanguage(forcedSource));
+        }
+
+        var (_, source, target) = await LanguageDetector
+            .GetLanguageAsync(InputText, cancellationToken, StartProcess, CompleteProcess, FinishProcess)
+            .ConfigureAwait(false);
+
+        return CreateTranslationLanguageContext(source, target);
+    }
+
+    private IdentifiedLanguageState CreateCacheIdentifiedLanguageState(HistoryModel history)
+    {
+        return new IdentifiedLanguageState(
+            IdentifiedLanguageStateKind.Cache,
+            ParseHistoryLanguage(history.EffectiveSourceLang) ?? ParseHistoryLanguage(history.SourceLang));
+    }
+
+    private static LangEnum? ParseHistoryLanguage(string? language)
+    {
+        if (Enum.TryParse<LangEnum>(language, true, out var parsed))
+            return parsed;
+
+        return null;
+    }
+
+    private static IdentifiedLanguageState CreateDetectedIdentifiedLanguageState(LangEnum language)
+        => new(IdentifiedLanguageStateKind.Detected, language);
+
+    private TranslationLanguageContext CreateTranslationLanguageContext(LangEnum effectiveSource, LangEnum effectiveTarget)
+        => new(Settings.SourceLang, Settings.TargetLang, effectiveSource, effectiveTarget);
 
     private void UpdateCaret()
     {
@@ -2099,14 +2247,13 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
     private void StartProcess()
     {
-        IdentifiedLanguage = string.Empty;
+        ApplyIdentifiedLanguageState(IdentifiedLanguageState.Empty);
         IsIdentifyProcessing = true;
     }
     private void FinishProcess() => IsIdentifyProcessing = false;
-    private void CompleteProcess(bool isSuccess, LangEnum source)
+    private void CompleteProcess(bool _, LangEnum source)
     {
-        var suffix = isSuccess ? string.Empty : $"「{_i18n.GetTranslation("UseSettingLang")}」";
-        IdentifiedLanguage = _i18n.GetTranslation($"LangEnum{source}") + suffix;
+        ApplyIdentifiedLanguageState(CreateDetectedIdentifiedLanguageState(source));
     }
 
     #endregion
