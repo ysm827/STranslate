@@ -9,6 +9,7 @@
 
 ## 全局开发规则
 - 项目内 MessageBox 必须统一走 `AppMessageBox.Show()`，不要直接调用 iNKORE `MessageBox.Show()`。
+- 从具体窗口或控件触发的 iNKORE `ContentDialog` 必须显式传入 owner，避免依赖活动窗口推断。
 
 ## 最小构建与运行
 ```powershell

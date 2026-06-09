@@ -11,6 +11,7 @@ namespace STranslate.Controls;
 public class HotkeyControl : Button
 {
     private readonly Internationalization _i18n;
+    private bool _isDialogOpening;
 
     static HotkeyControl()
     {
@@ -141,27 +142,53 @@ public class HotkeyControl : Button
 
     private async Task OpenHotkeyDialogAsync()
     {
-        if (Type == HotkeyType.Global &&
-            !string.IsNullOrEmpty(Hotkey) &&
-            !HotkeyMapper.RemoveHotkey(Hotkey))
+        if (_isDialogOpening)
             return;
 
-        var dialog = new HotkeyControlDialog(Type, Hotkey, DefaultHotkey, WindowTitle);
-        await dialog.ShowAsync();
-        switch (dialog.ReturnType)
+        _isDialogOpening = true;
+        try
         {
-            case HotkeyControlDialog.HkReturnType.Save:
-                SetHotkey(dialog.ResultValue);
-                break;
-            case HotkeyControlDialog.HkReturnType.Cancel:
-                SetHotkey(Hotkey);
-                break;
-            case HotkeyControlDialog.HkReturnType.Delete:
-                Delete();
-                break;
-            default:
-                break;
+            var owner = ResolveDialogOwner();
+            if (owner == null)
+                return;
+
+            if (Type == HotkeyType.Global &&
+                !string.IsNullOrEmpty(Hotkey) &&
+                !HotkeyMapper.RemoveHotkey(Hotkey))
+                return;
+
+            var dialog = new HotkeyControlDialog(Type, Hotkey, DefaultHotkey, WindowTitle);
+            await dialog.ShowAsync(owner);
+            switch (dialog.ReturnType)
+            {
+                case HotkeyControlDialog.HkReturnType.Save:
+                    SetHotkey(dialog.ResultValue);
+                    break;
+                case HotkeyControlDialog.HkReturnType.Cancel:
+                    SetHotkey(Hotkey);
+                    break;
+                case HotkeyControlDialog.HkReturnType.Delete:
+                    Delete();
+                    break;
+                default:
+                    break;
+            }
         }
+        finally
+        {
+            _isDialogOpening = false;
+        }
+    }
+
+    private Window? ResolveDialogOwner()
+    {
+        var owner = Window.GetWindow(this);
+        if (owner?.IsVisible == true)
+            return owner;
+
+        return Application.Current.Windows
+            .OfType<Window>()
+            .FirstOrDefault(window => window.IsActive && window.IsVisible);
     }
 
     public void SetHotkey(string keyStr, bool triggerValidate = true) => SetHotkey(new HotkeyModel(keyStr), triggerValidate);
