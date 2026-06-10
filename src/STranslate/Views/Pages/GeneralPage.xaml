@@ -16,7 +16,7 @@
     Title="General"
     d:DataContext="{d:DesignInstance Type=vm:GeneralViewModel,
                                      IsDesignTimeCreatable=False}"
-    d:DesignHeight="450"
+    d:DesignHeight="3450"
     d:DesignWidth="800"
     mc:Ignorable="d">
     <ui:Page.Resources>
@@ -382,7 +382,7 @@
                     </ui:SettingsCard>
                     <ui:SettingsCard Description="{DynamicResource General_FocusInputAfterScreenshotTranslateDescription}" Header="{DynamicResource General_FocusInputAfterScreenshotTranslate}">
                         <ui:SettingsCard.HeaderIcon>
-                            <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.Keyboard_20_Regular}" />
+                            <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.CursorHover_20_Regular}" />
                         </ui:SettingsCard.HeaderIcon>
                         <ui:ToggleSwitch
                             IsOn="{Binding Settings.FocusInputAfterScreenshotTranslate}"
@@ -429,7 +429,7 @@
 
                 <ui:SettingsExpander Description="{DynamicResource General_InstantTranslateDescription}" Header="{DynamicResource General_InstantTranslate}">
                     <ui:SettingsExpander.HeaderIcon>
-                        <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.Flash_20_Regular}" />
+                        <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.TopSpeed_20_Regular}" />
                     </ui:SettingsExpander.HeaderIcon>
                     <ui:SettingsExpander.Items>
                         <ui:SettingsCard Description="{DynamicResource General_TranslateOnPasteDescription}" Header="{DynamicResource General_TranslateOnPaste}">
@@ -458,7 +458,10 @@
                         OnContent="{DynamicResource Enable}" />
                 </ui:SettingsCard>
 
-                <ui:SettingsExpander Description="{DynamicResource General_TextSeparatorHandleTypeDescription}" Header="{DynamicResource General_TextSeparatorHandleType}">
+                <ui:SettingsExpander
+                    d:IsExpanded="True"
+                    Description="{DynamicResource General_TextSeparatorHandleTypeDescription}"
+                    Header="{DynamicResource General_TextSeparatorHandleType}">
                     <ui:SettingsExpander.HeaderIcon>
                         <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.TextUnderlineDouble_20_Regular}" />
                     </ui:SettingsExpander.HeaderIcon>
@@ -556,7 +559,7 @@
 
                     <ui:SettingsCard Description="{DynamicResource General_CrosswordFetchFailedFallbackTargetDescription}" Header="{DynamicResource General_CrosswordFetchFailedFallbackTarget}">
                         <ui:SettingsCard.HeaderIcon>
-                            <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.CursorClick_20_Regular}" />
+                            <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.ArrowHookUpLeft_20_Regular}" />
                         </ui:SettingsCard.HeaderIcon>
                         <ComboBox
                             DisplayMemberPath="Display"
@@ -579,7 +582,7 @@
 
                 <ui:SettingsCard Description="{DynamicResource General_DoubleClickTrayFunctionDescription}" Header="{DynamicResource General_DoubleClickTrayFunction}">
                     <ui:SettingsCard.HeaderIcon>
-                        <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.CursorClick_20_Regular}" />
+                        <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.WindowApps_20_Regular}" />
                     </ui:SettingsCard.HeaderIcon>
                     <ComboBox
                         DisplayMemberPath="Display"
@@ -789,7 +792,7 @@
 
                     <ui:SettingsCard Description="{DynamicResource General_MainHeaderConfigDescription}" Header="{DynamicResource General_MainHeaderConfig}">
                         <ui:SettingsCard.HeaderIcon>
-                            <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.PanelBottom_20_Regular}" />
+                            <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.PanelTopGallery_20_Regular}" />
                         </ui:SettingsCard.HeaderIcon>
                         <ikw:SimpleStackPanel
                             HorizontalAlignment="Right"
@@ -908,7 +911,7 @@
 
                 </control:CardGroup>
 
-                <ui:SettingsExpander Header="{DynamicResource General_OutputShowingControl}">
+                <ui:SettingsExpander d:IsExpanded="True" Header="{DynamicResource General_OutputShowingControl}">
                     <ui:SettingsExpander.HeaderIcon>
                         <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.PanelBottom_20_Regular}" />
                     </ui:SettingsExpander.HeaderIcon>
