@@ -318,14 +318,6 @@
     <sys:String x:Key="Standalone_ImTranShowTextControlDescription">顯示／隱藏右側文字框。</sys:String>
     <sys:String x:Key="Standalone_LayoutAnalysisHeader">版面分析設定</sys:String>
     <sys:String x:Key="Standalone_LayoutAnalysisDescription">設定辨識結果的合併方式。</sys:String>
-    <sys:String x:Key="Standalone_VerticalThresholdHeader">垂直相鄰偵測閾值比例</sys:String>
-    <sys:String x:Key="Standalone_VerticalThresholdDescription" xml:space="preserve">控制上下相鄰文字區塊的合併敏感度。&#10;0.1–0.3：嚴格模式，只合併非常接近的行。&#10;0.5–0.8：標準模式，合併段落內的行。&#10;1.0–3.0：寬鬆模式，合併距離較遠的文字區塊。&#10;&gt;5.0：幾乎合併所有垂直分佈的文字。</sys:String>
-    <sys:String x:Key="Standalone_HorizontalThresholdHeader">水平相鄰偵測閾值比例</sys:String>
-    <sys:String x:Key="Standalone_HorizontalThresholdDescription" xml:space="preserve">控制左右相鄰文字區塊的合併敏感度。&#10;0.1–0.3：嚴格模式，只合併非常接近的詞。&#10;0.5–0.8：標準模式，合併同行內的詞組。&#10;1.0–2.0：寬鬆模式，合併跨欄文字。&#10;&gt;5.0：幾乎合併所有水平分佈的文字。</sys:String>
-    <sys:String x:Key="Standalone_LineSpacingThresholdHeader">換行偵測閾值比例</sys:String>
-    <sys:String x:Key="Standalone_LineSpacingThresholdDescription" xml:space="preserve">控制合併文字時是否加入換行符。&#10;0.1–0.2：嚴格換行，即使很小距離也換行。&#10;0.3–0.5：標準換行，適合大多數文件。&#10;0.8–1.0：寬鬆換行，僅距離很大時換行。&#10;&gt;2.0：幾乎不換行，所有文字連在一起。</sys:String>
-    <sys:String x:Key="Standalone_WordSpacingThresholdHeader">詞間距偵測閾值比例</sys:String>
-    <sys:String x:Key="Standalone_WordSpacingThresholdDescription" xml:space="preserve">控制合併文字時是否加入空格。&#10;0.1–0.2：標準空格間距。&#10;0.3–0.5：寬鬆空格間距。&#10;&gt;1.0：幾乎不加入空格。</sys:String>
 
     <!--  History Page  -->
     <sys:String x:Key="Total">共</sys:String>
@@ -609,12 +601,8 @@
     <sys:String x:Key="ProxyTypeSocks5">Socks5代理</sys:String>
     <sys:String x:Key="ProxyTypeNone">無代理</sys:String>
 
-    <sys:String x:Key="LayoutAnalysisModeMergeAll">合併所有</sys:String>
-    <sys:String x:Key="LayoutAnalysisModeStrictParagraph">嚴格段落</sys:String>
-    <sys:String x:Key="LayoutAnalysisModeStandardDocument">標準文件</sys:String>
-    <sys:String x:Key="LayoutAnalysisModeColumnDocument">多欄文件</sys:String>
+    <sys:String x:Key="LayoutAnalysisModeSmart">智慧分段</sys:String>
     <sys:String x:Key="LayoutAnalysisModeNoMerge">不合併</sys:String>
-    <sys:String x:Key="LayoutAnalysisModeUserDefined">自訂</sys:String>
 
     <sys:String x:Key="WindowScreenTypeRememberLastLaunchLocation">記住上次的位置</sys:String>
     <sys:String x:Key="WindowScreenTypeCursor">滑鼠游標所在顯示器</sys:String>

@@ -15,7 +15,6 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.IO;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -903,57 +902,23 @@ public partial class ImageTranslateWindowViewModel : ObservableObject, IDisposab
     #region Layout Analysis
 
     /// <summary>
-    /// OCR 内容与其边界矩形的组合结构
-    /// </summary>
-    private class ContentWithRect
-    {
-        public OcrContent Content { get; set; } = null!;
-        public Rect Rect { get; set; }
-        public int Index { get; set; }
-    }
-
-    /// <summary>
-    /// 应用版面分析，将 OCR 识别的逐行结果按照空间位置关系进行分组合并
-    /// 直接修改 ocrResult.OcrContents，将相邻的文本块合并为新的 OcrContent
+    /// 应用版面分析，直接修改 OCR 结果中的内容分组。
     /// </summary>
     /// <param name="ocrResult">OCR 识别结果</param>
     private void ApplyLayoutAnalysis(OcrResult ocrResult)
     {
-        if (!Utilities.HasBoxPoints(ocrResult))
-            return;
-
 #if DEBUG
         var originalCount = ocrResult.OcrContents.Count;
         System.Diagnostics.Debug.WriteLine($"原始文本块数量: {originalCount}");
 #endif
 
-        // 创建一个副本用于分析，包含边界矩形信息
-        var contentWithRects = ocrResult.OcrContents
-            .Where(content => !string.IsNullOrWhiteSpace(content.Text) && content.BoxPoints?.Count > 0)
-            .Select((content, index) => new ContentWithRect
-            {
-                Content = content,
-                Rect = CalculateBoundingRect(content.BoxPoints!),
-                Index = index
-            })
-            .OrderBy(x => x.Rect.Top)
-            .ThenBy(x => x.Rect.Left)
-            .ToList();
-
-        if (contentWithRects.Count == 0)
-            return;
-
-        // 分组合并相邻的文本块
-        var mergedContents = GroupAndMergeContents(contentWithRects);
-
-        // 用合并后的内容替换原始内容
-        ocrResult.OcrContents.Clear();
-        ocrResult.OcrContents.AddRange(mergedContents);
+        OcrLayoutAnalyzer.Apply(ocrResult, Settings.LayoutAnalysisMode);
 
 #if DEBUG
         var finalCount = ocrResult.OcrContents.Count;
         System.Diagnostics.Debug.WriteLine($"合并后文本块数量: {finalCount}");
-        System.Diagnostics.Debug.WriteLine($"合并率: {(originalCount - finalCount) / (double)originalCount * 100:F1}%");
+        if (originalCount > 0)
+            System.Diagnostics.Debug.WriteLine($"合并率: {(originalCount - finalCount) / (double)originalCount * 100:F1}%");
 
         // 输出每个合并后的文本块
         for (int i = 0; i < ocrResult.OcrContents.Count; i++)
@@ -961,153 +926,6 @@ public partial class ImageTranslateWindowViewModel : ObservableObject, IDisposab
             System.Diagnostics.Debug.WriteLine($"文本块 {i + 1}: {ocrResult.OcrContents[i].Text}");
         }
 #endif
-    }
-
-    /// <summary>
-    /// 将相邻的 OCR 内容分组并合并
-    /// </summary>
-    private List<OcrContent> GroupAndMergeContents(List<ContentWithRect> contentWithRects)
-    {
-        var mergedContents = new List<OcrContent>();
-        var processed = new HashSet<int>();
-
-        for (int i = 0; i < contentWithRects.Count; i++)
-        {
-            if (processed.Contains(i)) continue;
-
-            var group = new List<ContentWithRect>();
-            var queue = new Queue<int>();
-            queue.Enqueue(i);
-            processed.Add(i);
-
-            // 使用广度优先搜索找到所有相邻的文本块
-            while (queue.Count > 0)
-            {
-                var currentIndex = queue.Dequeue();
-                var current = contentWithRects[currentIndex];
-
-                group.Add(current);
-
-                // 查找与当前文本块相邻的其他文本块
-                for (int j = 0; j < contentWithRects.Count; j++)
-                {
-                    if (processed.Contains(j)) continue;
-
-                    var candidate = contentWithRects[j];
-                    if (AreAdjacent(current.Rect, candidate.Rect))
-                    {
-                        queue.Enqueue(j);
-                        processed.Add(j);
-                    }
-                }
-            }
-
-            // 合并这个组的内容
-            var mergedContent = MergeContentGroup(group);
-            mergedContents.Add(mergedContent);
-        }
-
-        return mergedContents;
-    }
-
-    /// <summary>
-    /// 判断两个矩形是否相邻（可以合并）
-    /// </summary>
-    private bool AreAdjacent(Rect rect1, Rect rect2)
-    {
-        // 垂直相邻检测的阈值
-        var verticalThreshold = Math.Min(rect1.Height, rect2.Height) * Settings.VerticalThresholdRatio;
-        // 水平相邻检测的阈值
-        var horizontalThreshold = Math.Min(rect1.Width, rect2.Width) * Settings.HorizontalThresholdRatio;
-
-        // 检查垂直相邻（上下相邻）
-        bool verticallyAdjacent = Math.Abs(rect1.Bottom - rect2.Top) <= verticalThreshold ||
-                                 Math.Abs(rect2.Bottom - rect1.Top) <= verticalThreshold;
-
-        // 检查水平重叠
-        bool horizontallyOverlapping = !(rect1.Right < rect2.Left - horizontalThreshold ||
-                                        rect2.Right < rect1.Left - horizontalThreshold);
-
-        // 检查水平相邻（左右相邻）
-        bool horizontallyAdjacent = Math.Abs(rect1.Right - rect2.Left) <= horizontalThreshold ||
-                                   Math.Abs(rect2.Right - rect1.Left) <= horizontalThreshold;
-
-        // 检查垂直重叠
-        bool verticallyOverlapping = !(rect1.Bottom < rect2.Top - verticalThreshold ||
-                                      rect2.Bottom < rect1.Top - verticalThreshold);
-
-        return (verticallyAdjacent && horizontallyOverlapping) ||
-               (horizontallyAdjacent && verticallyOverlapping);
-    }
-
-    /// <summary>
-    /// 合并一组相邻的 OCR 内容
-    /// </summary>
-    private OcrContent MergeContentGroup(List<ContentWithRect> group)
-    {
-        if (group.Count == 1)
-            return group[0].Content;
-
-        // 按阅读顺序排序（从上到下，从左到右）
-        var sortedGroup = group
-            .OrderBy(item => item.Rect.Top)
-            .ThenBy(item => item.Rect.Left)
-            .ToList();
-
-        // 合并文本
-        var textBuilder = new StringBuilder();
-        for (int i = 0; i < sortedGroup.Count; i++)
-        {
-            var item = sortedGroup[i];
-
-            if (i > 0)
-            {
-                // 检查是否需要添加空格或换行
-                var currentRect = item.Rect;
-                var lastRect = sortedGroup[i - 1].Rect;
-
-                // 如果垂直距离较大，添加换行；否则添加空格
-                if (Math.Abs(currentRect.Top - lastRect.Bottom) > lastRect.Height * Settings.LineSpacingThresholdRatio)
-                {
-                    textBuilder.AppendLine();
-                }
-                else if (Math.Abs(currentRect.Left - lastRect.Right) > lastRect.Width * Settings.WordSpacingThresholdRatio)
-                {
-                    textBuilder.Append(' ');
-                }
-            }
-
-            textBuilder.Append(item.Content.Text.Trim());
-        }
-
-        // 计算合并后的边界框
-        var allPoints = sortedGroup
-            .SelectMany(item => item.Content.BoxPoints)
-            .ToList();
-
-        var mergedContent = new OcrContent
-        {
-            Text = textBuilder.ToString().Trim()
-        };
-
-        if (allPoints.Count > 0)
-        {
-            var minX = allPoints.Min(p => p.X);
-            var minY = allPoints.Min(p => p.Y);
-            var maxX = allPoints.Max(p => p.X);
-            var maxY = allPoints.Max(p => p.Y);
-
-            // 创建合并后的边界框坐标点
-            mergedContent.BoxPoints =
-            [
-                new(minX, minY),      // 左上
-                new(maxX, minY),      // 右上
-                new(maxX, maxY),      // 右下
-                new(minX, maxY)       // 左下
-            ];
-        }
-
-        return mergedContent;
     }
 
     /// <summary>

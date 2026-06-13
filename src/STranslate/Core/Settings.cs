@@ -8,6 +8,7 @@ using STranslate.Plugin;
 using STranslate.Views;
 using System.ComponentModel;
 using System.Drawing.Imaging;
+using System.Text.Json.Serialization;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
@@ -214,85 +215,8 @@ public partial class Settings : ObservableObject
     [ObservableProperty] public partial ImageQuality ImageQuality { get; set; } = ImageQuality.Medium;
 
     #region Layout Analysis
-    /* 版面分析参数配置
-     *
-     * 1.全部合并
-     * private const double VerticalThresholdRatio = 6.0;
-     * private const double HorizontalThresholdRatio = 6.0;
-     * private const double LineSpacingThresholdRatio = 0.3;
-     * private const double WordSpacingThresholdRatio = 0.2;
-     *
-     * 2.严格段落分析（保持原始结构）
-     * private const double VerticalThresholdRatio = 0.3;
-     * private const double HorizontalThresholdRatio = 0.2;
-     * private const double LineSpacingThresholdRatio = 0.2;
-     * private const double WordSpacingThresholdRatio = 0.1;
-     *
-     * 3.标准文档分析（推荐默认值）
-     * private const double VerticalThresholdRatio = 0.8;
-     * private const double HorizontalThresholdRatio = 0.5;
-     * private const double LineSpacingThresholdRatio = 0.3;
-     * private const double WordSpacingThresholdRatio = 0.2;
-     *
-     * 4.分栏文档分析（合并左右分栏）
-     * private const double VerticalThresholdRatio = 0.6;
-     * private const double HorizontalThresholdRatio = 2.0;     // 增大以跨越分栏间距
-     * private const double LineSpacingThresholdRatio = 0.3;
-     * private const double WordSpacingThresholdRatio = 0.2;
-     *
-     * 5.不合并任何文本块
-     * private const double VerticalThresholdRatio = 0.0;       // 设置为0，不允许垂直合并
-     * private const double HorizontalThresholdRatio = 0.0;     // 设置为0，不允许水平合并
-     * private const double LineSpacingThresholdRatio = 0.3;    // 这两个参数在不合并时不会被使用
-     * private const double WordSpacingThresholdRatio = 0.2;    // 这两个参数在不合并时不会被使用
-     */
-    [ObservableProperty] public partial LayoutAnalysisMode LayoutAnalysisMode { get; set; } = LayoutAnalysisMode.StandardDocument;
-
-    /// <summary>
-    /// 垂直相邻检测阈值比例
-    /// 作用: 控制上下相邻文本块的合并敏感度
-    /// 计算: 阈值 = Math.Min(rect1.Height, rect2.Height)* VerticalThresholdRatio
-    /// 调整建议:
-    ///     0.1-0.3: 严格模式，只合并非常接近的行
-    ///     0.5-0.8: 标准模式，合并段落内的行
-    ///     1.0-3.0: 宽松模式，合并距离较远的文本块
-    ///     >5.0: 几乎合并所有垂直分布的文本
-    /// </summary>
-    [ObservableProperty] public partial double VerticalThresholdRatio { get; set; } = 0.8;
-
-    /// <summary>
-    /// 水平相邻检测阈值比例
-    /// 作用: 控制左右相邻文本块的合并敏感度
-    /// 计算: 阈值 = Math.Min(rect1.Width, rect2.Width)* HorizontalThresholdRatio
-    /// 调整建议:
-    ///     0.1-0.3: 严格模式，只合并非常接近的词
-    ///     0.5-0.8: 标准模式，合并同行内的词组
-    ///     1.0-2.0: 宽松模式，合并分栏文本
-    ///     >5.0: 几乎合并所有水平分布的文本
-    /// </summary>
-    [ObservableProperty] public partial double HorizontalThresholdRatio { get; set; } = 0.5;
-
-    /// <summary>
-    /// 换行检测阈值比例
-    /// 作用: 控制合并文本时是否添加换行符
-    /// 计算: 阈值 = lastRect.Height* LineSpacingThresholdRatio
-    /// 调整建议:
-    ///     0.1-0.2: 严格换行，即使很小的距离也换行
-    ///     0.3-0.5: 标准换行，适合大多数文档
-    ///     0.8-1.0: 宽松换行，只有距离很大才换行
-    ///     >2.0: 几乎不换行，所有文本连在一起
-    [ObservableProperty] public partial double LineSpacingThresholdRatio { get; set; } = 0.3;
-
-    /// <summary>
-    /// 词间距检测阈值比例
-    /// 作用: 控制合并文本时是否添加空格
-    /// 计算: 阈值 = lastRect.Width* WordSpacingThresholdRatio
-    /// 调整建议:
-    ///     0.1-0.2: 标准空格间距
-    ///     0.3-0.5: 宽松空格间距
-    ///     >1.0: 几乎不添加空格
-    /// </summary>
-    [ObservableProperty] public partial double WordSpacingThresholdRatio { get; set; } = 0.2;
+    [JsonConverter(typeof(LayoutAnalysisModeJsonConverter))]
+    [ObservableProperty] public partial LayoutAnalysisMode LayoutAnalysisMode { get; set; } = LayoutAnalysisMode.Smart;
     #endregion
 
     #region OCR Settings
@@ -476,6 +400,7 @@ public partial class Settings : ObservableObject
             throw new InvalidOperationException("Storage is not set. Please call SetStorage() before Initialize().");
         }
 
+        NormalizeLayoutAnalysisMode();
         EnsureMainHeaderVisibleActionsInitialized();
 
         ApplyLogLevel();
@@ -512,6 +437,12 @@ public partial class Settings : ObservableObject
             ImageQuality.High => new BmpBitmapEncoder(),
             _ => new PngBitmapEncoder(),
         };
+    }
+
+    internal void NormalizeLayoutAnalysisMode()
+    {
+        if (LayoutAnalysisMode is not (LayoutAnalysisMode.Smart or LayoutAnalysisMode.NoMerge))
+            LayoutAnalysisMode = LayoutAnalysisMode.Smart;
     }
 
     #endregion
@@ -800,12 +731,8 @@ public enum CrosswordFetchFailedFallbackTarget
 
 public enum LayoutAnalysisMode
 {
-    MergeAll,
-    StrictParagraph,
-    StandardDocument,
-    ColumnDocument,
+    Smart,
     NoMerge,
-    UserDefined,
 }
 
 public enum WindowScreenType

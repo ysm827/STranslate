@@ -310,14 +310,6 @@
     <sys:String x:Key="Standalone_ImTranShowTextControlDescription">右側のテキストボックスの表示/非表示</sys:String>
     <sys:String x:Key="Standalone_LayoutAnalysisHeader">レイアウト分析設定</sys:String>
     <sys:String x:Key="Standalone_LayoutAnalysisDescription">認識結果の結合設定</sys:String>
-    <sys:String x:Key="Standalone_VerticalThresholdHeader">垂直方向の隣接検出閾値比率</sys:String>
-    <sys:String x:Key="Standalone_VerticalThresholdDescription" xml:space="preserve">上下に隣接するテキストブロックの結合感度を制御&#10;0.1-0.3: 厳格モード。非常に近い行のみ結合&#10;0.5-0.8: 標準モード。段落内の行を結合&#10;1.0-3.0: 緩いモード。離れたテキストブロックも結合&#10;&gt;5.0: 垂直分布するほぼ全てのテキストを結合</sys:String>
-    <sys:String x:Key="Standalone_HorizontalThresholdHeader">水平方向の隣接検出閾値比率</sys:String>
-    <sys:String x:Key="Standalone_HorizontalThresholdDescription" xml:space="preserve">左右に隣接するテキストブロックの結合感度を制御&#10;0.1-0.3: 厳格モード。非常に近い単語のみ結合&#10;0.5-0.8: 標準モード。行内のフレーズを結合&#10;1.0-2.0: 緩いモード。分欄テキストを結合&#10;&gt;5.0: 水平分布するほぼ全てのテキストを結合</sys:String>
-    <sys:String x:Key="Standalone_LineSpacingThresholdHeader">改行検出閾値比率</sys:String>
-    <sys:String x:Key="Standalone_LineSpacingThresholdDescription" xml:space="preserve">テキスト結合時の改行追加を制御&#10;0.1-0.2: 厳格な改行。距離がわずかでも改行&#10;0.3-0.5: 標準的な改行。多くの文書に適する&#10;0.8-1.0: 緩い改行。距離が大きい場合のみ改行&#10;&gt;2.0: ほぼ改行なし。全テキストを連結</sys:String>
-    <sys:String x:Key="Standalone_WordSpacingThresholdHeader">単語間隔検出閾値比率</sys:String>
-    <sys:String x:Key="Standalone_WordSpacingThresholdDescription" xml:space="preserve">テキスト結合時のスペース追加を制御&#10;0.1-0.2: 標準的なスペース間隔&#10;0.3-0.5: 緩いスペース間隔&#10;&gt;1.0: ほぼスペースを追加しない</sys:String>
 
     <sys:String x:Key="Total">計</sys:String>
     <sys:String x:Key="Item">件</sys:String>
@@ -592,12 +584,8 @@
     <sys:String x:Key="ProxyTypeSocks5">Socks5プロキシ</sys:String>
     <sys:String x:Key="ProxyTypeNone">プロキシなし</sys:String>
 
-    <sys:String x:Key="LayoutAnalysisModeMergeAll">全て結合</sys:String>
-    <sys:String x:Key="LayoutAnalysisModeStrictParagraph">厳格な段落</sys:String>
-    <sys:String x:Key="LayoutAnalysisModeStandardDocument">標準ドキュメント</sys:String>
-    <sys:String x:Key="LayoutAnalysisModeColumnDocument">多段組みドキュメント</sys:String>
+    <sys:String x:Key="LayoutAnalysisModeSmart">スマート分割</sys:String>
     <sys:String x:Key="LayoutAnalysisModeNoMerge">結合しない</sys:String>
-    <sys:String x:Key="LayoutAnalysisModeUserDefined">カスタム</sys:String>
 
     <sys:String x:Key="WindowScreenTypeRememberLastLaunchLocation">前回の位置を記憶</sys:String>
     <sys:String x:Key="WindowScreenTypeCursor">マウスカーソルのある画面</sys:String>

@@ -318,14 +318,6 @@
     <sys:String x:Key="Standalone_ImTranShowTextControlDescription">Show or hide the text panel on the right side.</sys:String>
     <sys:String x:Key="Standalone_LayoutAnalysisHeader">Layout Analysis Settings</sys:String>
     <sys:String x:Key="Standalone_LayoutAnalysisDescription">Configure how recognized text blocks are merged.</sys:String>
-    <sys:String x:Key="Standalone_VerticalThresholdHeader">Vertical Adjacency Threshold Ratio</sys:String>
-    <sys:String x:Key="Standalone_VerticalThresholdDescription" xml:space="preserve">Controls the merge sensitivity for vertically adjacent text blocks.&#10;0.1–0.3: Strict mode — only merge very close lines.&#10;0.5–0.8: Standard mode — merge lines within a paragraph.&#10;1.0–3.0: Loose mode — merge text blocks that are farther apart.&#10;&gt;5.0: Merge almost all vertically distributed text.</sys:String>
-    <sys:String x:Key="Standalone_HorizontalThresholdHeader">Horizontal Adjacency Threshold Ratio</sys:String>
-    <sys:String x:Key="Standalone_HorizontalThresholdDescription" xml:space="preserve">Controls the merge sensitivity for horizontally adjacent text blocks.&#10;0.1–0.3: Strict mode — merge only very close words.&#10;0.5–0.8: Standard mode — merge words within the same line.&#10;1.0–2.0: Loose mode — merge across columns.&#10;&gt;5.0: Merge almost all horizontally distributed text.</sys:String>
-    <sys:String x:Key="Standalone_LineSpacingThresholdHeader">Line Break Detection Threshold Ratio</sys:String>
-    <sys:String x:Key="Standalone_LineSpacingThresholdDescription" xml:space="preserve">Controls whether to insert line breaks when merging text.&#10;0.1–0.2: Strict line breaks — even small gaps cause new lines.&#10;0.3–0.5: Standard line breaks — suitable for most documents.&#10;0.8–1.0: Loose line breaks — only large gaps cause new lines.&#10;&gt;2.0: Almost no line breaks — text is merged continuously.</sys:String>
-    <sys:String x:Key="Standalone_WordSpacingThresholdHeader">Word Spacing Detection Threshold Ratio</sys:String>
-    <sys:String x:Key="Standalone_WordSpacingThresholdDescription" xml:space="preserve">Controls whether to insert spaces when merging text.&#10;0.1–0.2: Standard spacing.&#10;0.3–0.5: Loose spacing.&#10;&gt;1.0: Almost no spaces added.</sys:String>
 
     <!--  History Page  -->
     <sys:String x:Key="Total">Total</sys:String>
@@ -606,12 +598,8 @@
     <sys:String x:Key="ProxyTypeSocks5">Socks5</sys:String>
     <sys:String x:Key="ProxyTypeNone">None</sys:String>
 
-    <sys:String x:Key="LayoutAnalysisModeMergeAll">MergeAll</sys:String>
-    <sys:String x:Key="LayoutAnalysisModeStrictParagraph">StrictParagraph</sys:String>
-    <sys:String x:Key="LayoutAnalysisModeStandardDocument">StandardDocument</sys:String>
-    <sys:String x:Key="LayoutAnalysisModeColumnDocument">ColumnDocument</sys:String>
+    <sys:String x:Key="LayoutAnalysisModeSmart">Smart</sys:String>
     <sys:String x:Key="LayoutAnalysisModeNoMerge">NoMerge</sys:String>
-    <sys:String x:Key="LayoutAnalysisModeUserDefined">UserDefined</sys:String>
 
     <sys:String x:Key="WindowScreenTypeRememberLastLaunchLocation">RememberLastLaunchLocation</sys:String>
     <sys:String x:Key="WindowScreenTypeCursor">Cursor</sys:String>

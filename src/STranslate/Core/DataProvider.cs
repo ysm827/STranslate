@@ -122,7 +122,10 @@ public class DataProvider
 
     public class LayoutAnalysisModeData : DropdownDataGeneric<LayoutAnalysisMode> { }
     public List<LayoutAnalysisModeData> LayoutAnalysisModes { get; } =
-        DropdownDataGeneric<LayoutAnalysisMode>.GetValues<LayoutAnalysisModeData>("LayoutAnalysisMode");
+        DropdownDataGeneric<LayoutAnalysisMode>
+            .GetValues<LayoutAnalysisModeData>("LayoutAnalysisMode")
+            .Where(x => x.Value is LayoutAnalysisMode.Smart or LayoutAnalysisMode.NoMerge)
+            .ToList();
 
     #endregion
 

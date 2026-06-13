@@ -310,14 +310,6 @@
     <sys:String x:Key="Standalone_ImTranShowTextControlDescription">오른쪽 텍스트 상자 표시/숨기기</sys:String>
     <sys:String x:Key="Standalone_LayoutAnalysisHeader">레이아웃 분석 설정</sys:String>
     <sys:String x:Key="Standalone_LayoutAnalysisDescription">인식 결과에 대한 병합 구성</sys:String>
-    <sys:String x:Key="Standalone_VerticalThresholdHeader">수직 인접 감지 임계값 비율</sys:String>
-    <sys:String x:Key="Standalone_VerticalThresholdDescription" xml:space="preserve">상하 인접 텍스트 블록의 병합 민감도 제어&#10;0.1-0.3: 엄격 모드, 매우 가까운 줄만 병합&#10;0.5-0.8: 표준 모드, 문단 내의 줄 병합&#10;1.0-3.0: 느슨한 모드, 거리가 먼 텍스트 블록도 병합&#10;&gt;5.0: 수직으로 분포된 거의 모든 텍스트 병합</sys:String>
-    <sys:String x:Key="Standalone_HorizontalThresholdHeader">수평 인접 감지 임계값 비율</sys:String>
-    <sys:String x:Key="Standalone_HorizontalThresholdDescription" xml:space="preserve">좌우 인접 텍스트 블록의 병합 민감도 제어&#10;0.1-0.3: 엄격 모드, 매우 가까운 단어만 병합&#10;0.5-0.8: 표준 모드, 같은 줄 내의 구문 병합&#10;1.0-2.0: 느슨한 모드, 단 분리 텍스트 병합&#10;&gt;5.0: 수평으로 분포된 거의 모든 텍스트 병합</sys:String>
-    <sys:String x:Key="Standalone_LineSpacingThresholdHeader">줄 바꿈 감지 임계값 비율</sys:String>
-    <sys:String x:Key="Standalone_LineSpacingThresholdDescription" xml:space="preserve">텍스트 병합 시 줄 바꿈 추가 여부 제어&#10;0.1-0.2: 엄격한 줄 바꿈, 아주 작은 거리라도 줄 바꿈&#10;0.3-0.5: 표준 줄 바꿈, 대부분의 문서에 적합&#10;0.8-1.0: 느슨한 줄 바꿈, 거리가 매우 멀어야 줄 바꿈&#10;&gt;2.0: 거의 줄 바꿈 없음, 모든 텍스트를 연결</sys:String>
-    <sys:String x:Key="Standalone_WordSpacingThresholdHeader">단어 간격 감지 임계값 비율</sys:String>
-    <sys:String x:Key="Standalone_WordSpacingThresholdDescription" xml:space="preserve">텍스트 병합 시 공백 추가 여부 제어&#10;0.1-0.2: 표준 공백 간격&#10;0.3-0.5: 느슨한 공백 간격&#10;&gt;1.0: 거의 공백 추가 안 함</sys:String>
 
     <sys:String x:Key="Total">총</sys:String>
     <sys:String x:Key="Item">항목</sys:String>
@@ -592,12 +584,8 @@
     <sys:String x:Key="ProxyTypeSocks5">Socks5 프록시</sys:String>
     <sys:String x:Key="ProxyTypeNone">프록시 없음</sys:String>
 
-    <sys:String x:Key="LayoutAnalysisModeMergeAll">모두 병합</sys:String>
-    <sys:String x:Key="LayoutAnalysisModeStrictParagraph">엄격한 문단</sys:String>
-    <sys:String x:Key="LayoutAnalysisModeStandardDocument">표준 문서</sys:String>
-    <sys:String x:Key="LayoutAnalysisModeColumnDocument">다단 문서</sys:String>
+    <sys:String x:Key="LayoutAnalysisModeSmart">스마트 분할</sys:String>
     <sys:String x:Key="LayoutAnalysisModeNoMerge">병합 안 함</sys:String>
-    <sys:String x:Key="LayoutAnalysisModeUserDefined">사용자 정의</sys:String>
 
     <sys:String x:Key="WindowScreenTypeRememberLastLaunchLocation">마지막 실행 위치 기억</sys:String>
     <sys:String x:Key="WindowScreenTypeCursor">마우스 커서가 있는 모니터</sys:String>

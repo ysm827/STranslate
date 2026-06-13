@@ -118,100 +118,16 @@
                         OnContent="{DynamicResource Enable}" />
                 </ui:SettingsCard>
 
-                <!--  高级设置  -->
-                <ui:SettingsExpander Description="{DynamicResource Standalone_LayoutAnalysisDescription}" Header="{DynamicResource Standalone_LayoutAnalysisHeader}">
-                    <ui:SettingsExpander.HeaderIcon>
+                <ui:SettingsCard Description="{DynamicResource Standalone_LayoutAnalysisDescription}" Header="{DynamicResource Standalone_LayoutAnalysisHeader}">
+                    <ui:SettingsCard.HeaderIcon>
                         <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.TableOffsetSettings_20_Regular}" />
-                    </ui:SettingsExpander.HeaderIcon>
+                    </ui:SettingsCard.HeaderIcon>
                     <ComboBox
                         DisplayMemberPath="Display"
                         ItemsSource="{Binding DataProvider.LayoutAnalysisModes}"
                         SelectedValue="{Binding Settings.LayoutAnalysisMode}"
                         SelectedValuePath="Value" />
-
-                    <ui:SettingsExpander.Items>
-                        <ui:SettingsCard Description="{DynamicResource Standalone_VerticalThresholdDescription}" Header="{DynamicResource Standalone_VerticalThresholdHeader}">
-                            <ui:SettingsCard.HeaderIcon>
-                                <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.CenterVertical_20_Regular}" />
-                            </ui:SettingsCard.HeaderIcon>
-                            <ikw:SimpleStackPanel Orientation="Horizontal" Spacing="12">
-                                <Slider
-                                    IsSnapToTickEnabled="True"
-                                    Maximum="6.0"
-                                    Minimum="0.0"
-                                    TickFrequency="0.1"
-                                    Value="{Binding Settings.VerticalThresholdRatio}">
-                                    <i:Interaction.Triggers>
-                                        <i:EventTrigger EventName="ValueChanged">
-                                            <i:InvokeCommandAction Command="{Binding SliderValueChangedCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Slider}}" />
-                                        </i:EventTrigger>
-                                    </i:Interaction.Triggers>
-                                </Slider>
-                                <TextBlock VerticalAlignment="Center" Text="{Binding Settings.VerticalThresholdRatio, StringFormat=F1}" />
-                            </ikw:SimpleStackPanel>
-                        </ui:SettingsCard>
-                        <ui:SettingsCard Description="{DynamicResource Standalone_HorizontalThresholdDescription}" Header="{DynamicResource Standalone_HorizontalThresholdHeader}">
-                            <ui:SettingsCard.HeaderIcon>
-                                <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.CenterHorizontal_20_Regular}" />
-                            </ui:SettingsCard.HeaderIcon>
-                            <ikw:SimpleStackPanel Orientation="Horizontal" Spacing="12">
-                                <Slider
-                                    IsSnapToTickEnabled="True"
-                                    Maximum="6.0"
-                                    Minimum="0.0"
-                                    TickFrequency="0.1"
-                                    Value="{Binding Settings.HorizontalThresholdRatio}">
-                                    <i:Interaction.Triggers>
-                                        <i:EventTrigger EventName="ValueChanged">
-                                            <i:InvokeCommandAction Command="{Binding SliderValueChangedCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Slider}}" />
-                                        </i:EventTrigger>
-                                    </i:Interaction.Triggers>
-                                </Slider>
-                                <TextBlock VerticalAlignment="Center" Text="{Binding Settings.HorizontalThresholdRatio, StringFormat=F1}" />
-                            </ikw:SimpleStackPanel>
-                        </ui:SettingsCard>
-                        <ui:SettingsCard Description="{DynamicResource Standalone_LineSpacingThresholdDescription}" Header="{DynamicResource Standalone_LineSpacingThresholdHeader}">
-                            <ui:SettingsCard.HeaderIcon>
-                                <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.TextLineSpacing_20_Regular}" />
-                            </ui:SettingsCard.HeaderIcon>
-                            <ikw:SimpleStackPanel Orientation="Horizontal" Spacing="12">
-                                <Slider
-                                    IsSnapToTickEnabled="True"
-                                    Maximum="3.0"
-                                    Minimum="0.0"
-                                    TickFrequency="0.1"
-                                    Value="{Binding Settings.LineSpacingThresholdRatio}">
-                                    <i:Interaction.Triggers>
-                                        <i:EventTrigger EventName="ValueChanged">
-                                            <i:InvokeCommandAction Command="{Binding SliderValueChangedCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Slider}}" />
-                                        </i:EventTrigger>
-                                    </i:Interaction.Triggers>
-                                </Slider>
-                                <TextBlock VerticalAlignment="Center" Text="{Binding Settings.LineSpacingThresholdRatio, StringFormat=F1}" />
-                            </ikw:SimpleStackPanel>
-                        </ui:SettingsCard>
-                        <ui:SettingsCard Description="{DynamicResource Standalone_WordSpacingThresholdDescription}" Header="{DynamicResource Standalone_WordSpacingThresholdHeader}">
-                            <ui:SettingsCard.HeaderIcon>
-                                <ui:FontIcon Icon="{x:Static ui:FluentSystemIcons.TextWholeWord_20_Regular}" />
-                            </ui:SettingsCard.HeaderIcon>
-                            <ikw:SimpleStackPanel Orientation="Horizontal" Spacing="12">
-                                <Slider
-                                    IsSnapToTickEnabled="True"
-                                    Maximum="2.0"
-                                    Minimum="0.0"
-                                    TickFrequency="0.1"
-                                    Value="{Binding Settings.WordSpacingThresholdRatio}">
-                                    <i:Interaction.Triggers>
-                                        <i:EventTrigger EventName="ValueChanged">
-                                            <i:InvokeCommandAction Command="{Binding SliderValueChangedCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Slider}}" />
-                                        </i:EventTrigger>
-                                    </i:Interaction.Triggers>
-                                </Slider>
-                                <TextBlock VerticalAlignment="Center" Text="{Binding Settings.WordSpacingThresholdRatio, StringFormat=F1}" />
-                            </ikw:SimpleStackPanel>
-                        </ui:SettingsCard>
-                    </ui:SettingsExpander.Items>
-                </ui:SettingsExpander>
+                </ui:SettingsCard>
                 <!--#endregion-->
             </ikw:SimpleStackPanel>
         </ui:ScrollViewerEx>
