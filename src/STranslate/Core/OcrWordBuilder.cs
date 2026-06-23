@@ -12,34 +12,45 @@ internal static class OcrWordBuilder
         if (contents == null)
             return [];
 
+        var blocks = contents
+            .Where(content => !string.IsNullOrEmpty(content.Text) &&
+                              content.BoxPoints != null &&
+                              content.BoxPoints.Count > 0)
+            .Select(content => new OcrTextBlock(content.Text, CalculateBoundingBox(content.BoxPoints!)))
+            .Where(block => IsSelectableBounds(block.BoundingBox))
+            .OrderBy(block => block.BoundingBox.Top)
+            .ThenBy(block => block.BoundingBox.Left)
+            .ToList();
+
         var words = new List<OcrWord>();
-        foreach (var content in contents)
+        OcrTextBlock? previousBlock = null;
+        foreach (var block in blocks)
         {
-            if (string.IsNullOrEmpty(content.Text) ||
-                content.BoxPoints == null ||
-                content.BoxPoints.Count == 0)
-                continue;
+            if (previousBlock != null)
+            {
+                var separator = GetSeparator(previousBlock, block);
+                if (!string.IsNullOrEmpty(separator))
+                    words.Add(CreateTextOnlyWord(separator));
+            }
 
-            var boundingBox = CalculateBoundingBox(content.BoxPoints);
-            if (boundingBox.IsEmpty || boundingBox.Width <= 0 || boundingBox.Height <= 0)
-                continue;
-
-            var avgCharWidth = boundingBox.Width / Math.Max(content.Text.Length, 1);
-            for (var i = 0; i < content.Text.Length; i++)
+            var avgCharWidth = block.BoundingBox.Width / Math.Max(block.Text.Length, 1);
+            for (var i = 0; i < block.Text.Length; i++)
             {
                 words.Add(new OcrWord
                 {
-                    Text = content.Text[i].ToString(),
+                    Text = block.Text[i].ToString(),
                     BoundingBox = new Rect(
-                        boundingBox.Left + avgCharWidth * i,
-                        boundingBox.Top,
+                        block.BoundingBox.Left + avgCharWidth * i,
+                        block.BoundingBox.Top,
                         avgCharWidth,
-                        boundingBox.Height)
+                        block.BoundingBox.Height)
                 });
             }
+
+            previousBlock = block;
         }
 
-        return CreateIndexedCollection(words);
+        return CreateIndexedCollection(words, preserveOrder: true);
     }
 
     public static IReadOnlyList<OcrWord> CreateFromFormattedText(
@@ -64,7 +75,11 @@ internal static class OcrWordBuilder
             var geometry = formattedText.BuildHighlightGeometry(origin, i, 1);
             var bounds = geometry?.Bounds ?? Rect.Empty;
             if (bounds.IsEmpty || bounds.Width <= 0 || bounds.Height <= 0)
+            {
+                if (char.IsWhiteSpace(text[i]))
+                    words.Add(CreateTextOnlyWord(text[i].ToString()));
                 continue;
+            }
 
             var clippedBounds = Rect.Intersect(bounds, clipRect);
             if (clippedBounds.IsEmpty || clippedBounds.Width <= 0 || clippedBounds.Height <= 0)
@@ -80,25 +95,29 @@ internal static class OcrWordBuilder
         return words;
     }
 
-    public static ObservableCollection<OcrWord> CreateIndexedCollection(IEnumerable<OcrWord> words)
+    public static ObservableCollection<OcrWord> CreateIndexedCollection(IEnumerable<OcrWord> words, bool preserveOrder = false)
     {
-        var sortedWords = words
+        var indexedWords = words
             .Where(word => !string.IsNullOrEmpty(word.Text) &&
-                           !word.BoundingBox.IsEmpty &&
-                           word.BoundingBox.Width > 0 &&
-                           word.BoundingBox.Height > 0)
-            .OrderBy(word => word.BoundingBox.Top)
-            .ThenBy(word => word.BoundingBox.Left)
+                           (IsSelectableBounds(word.BoundingBox) || word.BoundingBox.IsEmpty))
             .ToList();
 
+        if (!preserveOrder)
+        {
+            indexedWords = indexedWords
+                .OrderBy(word => IsSelectableBounds(word.BoundingBox) ? word.BoundingBox.Top : double.MaxValue)
+                .ThenBy(word => IsSelectableBounds(word.BoundingBox) ? word.BoundingBox.Left : double.MaxValue)
+                .ToList();
+        }
+
         var currentIndex = 0;
-        foreach (var word in sortedWords)
+        foreach (var word in indexedWords)
         {
             word.StartIndexInFullText = currentIndex;
             currentIndex += word.Text.Length;
         }
 
-        return new ObservableCollection<OcrWord>(sortedWords);
+        return new ObservableCollection<OcrWord>(indexedWords);
     }
 
     private static Rect CalculateBoundingBox(IReadOnlyCollection<BoxPoint> boxPoints)
@@ -117,4 +136,44 @@ internal static class OcrWordBuilder
             rect.Top * scaleFactor,
             rect.Width * scaleFactor,
             rect.Height * scaleFactor);
+
+    private static OcrWord CreateTextOnlyWord(string text) =>
+        new()
+        {
+            Text = text,
+            BoundingBox = Rect.Empty
+        };
+
+    private static string GetSeparator(OcrTextBlock previous, OcrTextBlock current)
+    {
+        if (IsNextLine(previous.BoundingBox, current.BoundingBox))
+            return Environment.NewLine;
+
+        if (NeedsSpaceBetween(previous.Text, current.Text) &&
+            current.BoundingBox.Left > previous.BoundingBox.Right)
+        {
+            return " ";
+        }
+
+        return string.Empty;
+    }
+
+    private static bool IsNextLine(Rect previous, Rect current)
+    {
+        var previousCenterY = previous.Top + previous.Height / 2;
+        var currentCenterY = current.Top + current.Height / 2;
+        var sameLineTolerance = Math.Max(previous.Height, current.Height) * 0.6;
+        return Math.Abs(currentCenterY - previousCenterY) > sameLineTolerance;
+    }
+
+    private static bool NeedsSpaceBetween(string previous, string current) =>
+        previous.Length > 0 &&
+        current.Length > 0 &&
+        !char.IsWhiteSpace(previous[^1]) &&
+        !char.IsWhiteSpace(current[0]);
+
+    private static bool IsSelectableBounds(Rect rect) =>
+        !rect.IsEmpty && rect.Width > 0 && rect.Height > 0;
+
+    private sealed record OcrTextBlock(string Text, Rect BoundingBox);
 }

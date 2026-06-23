@@ -380,6 +380,7 @@ public partial class ImageTranslateWindowViewModel : ObservableObject, IDisposab
             if (_sourceImage != null)
             {
                 Clipboard.SetImage(_sourceImage);
+                _snackbar.ShowSuccess(_i18n.GetTranslation("CopySuccess"));
                 return;
             }
 
@@ -724,7 +725,8 @@ public partial class ImageTranslateWindowViewModel : ObservableObject, IDisposab
                     overlay.FormattedText,
                     overlay.TextPosition,
                     overlay.Plan.TextClipRect,
-                    scaleFactor)));
+                    scaleFactor)),
+            preserveOrder: true);
 
         var drawingVisual = new DrawingVisual();
 
