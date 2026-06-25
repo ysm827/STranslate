@@ -309,7 +309,7 @@ internal static class OcrLayoutAnalyzer
             if (tableContext.ShouldKeepSeparate(lastLine, line))
                 continue;
 
-            if (!CanAppendToParagraph(lastLine, line, metrics, out var confidence))
+            if (!CanAppendToParagraph(paragraph, line, metrics, out var confidence))
                 continue;
 
             var horizontalScore = HorizontalOverlapRatio(lastLine.Bounds, line.Bounds) * 3;
@@ -328,12 +328,13 @@ internal static class OcrLayoutAnalyzer
     }
 
     private static bool CanAppendToParagraph(
-        LineSegment previous,
+        ParagraphGroup paragraph,
         LineSegment current,
         LayoutMetrics metrics,
         out double confidence)
     {
         confidence = 0;
+        var previous = paragraph.LastLine;
 
         var verticalGap = VerticalGap(previous.Bounds, current.Bounds);
         if (verticalGap > metrics.LineHeight * 1.25)
@@ -366,7 +367,7 @@ internal static class OcrLayoutAnalyzer
             return true;
         }
 
-        if (LooksLikeParagraphBreak(previous, current, metrics, verticalGap, horizontalOverlap, leftDelta))
+        if (LooksLikeParagraphBreak(paragraph, previous, current, metrics, verticalGap, horizontalOverlap, leftDelta))
             return false;
 
         if (LooksLikeGridCell(previous, metrics) && LooksLikeGridCell(current, metrics))
@@ -390,6 +391,7 @@ internal static class OcrLayoutAnalyzer
     }
 
     private static bool LooksLikeParagraphBreak(
+        ParagraphGroup paragraph,
         LineSegment previous,
         LineSegment current,
         LayoutMetrics metrics,
@@ -397,24 +399,44 @@ internal static class OcrLayoutAnalyzer
         double horizontalOverlap,
         double leftDelta)
     {
-        if (verticalGap <= GetParagraphBreakThreshold(metrics))
-            return false;
-
         if (IsListStart(previous.Text) || IsListStart(current.Text))
             return false;
 
         var sameLeftEdge = leftDelta <= metrics.LineHeight * 0.8;
         var currentIsIndented = current.Bounds.Left > previous.Bounds.Left + metrics.LineHeight * 0.8;
-        var currentReturnsToBodyLeft = current.Bounds.Left <= previous.Bounds.Left + metrics.LineHeight * 0.4;
-        var previousIsShortLine = previous.Bounds.Width <= current.Bounds.Width * 0.82;
+        var currentReturnsToPreviousLeft = current.Bounds.Left <= previous.Bounds.Left + metrics.LineHeight * 0.4;
+        var bodyLeft = paragraph.BodyLeft;
+        var previousReturnsToBodyLeft = previous.Bounds.Left <= bodyLeft + metrics.LineHeight * 0.45;
+        var currentLooksLikeFirstLineIndent = LooksLikeFirstLineIndent(paragraph, current, metrics);
+        var previousIsShortLine =
+            previous.Bounds.Width <= current.Bounds.Width * 0.82 ||
+            paragraph.IsShortLine(previous, metrics);
+
+        if (previousIsShortLine &&
+            previousReturnsToBodyLeft &&
+            currentLooksLikeFirstLineIndent &&
+            horizontalOverlap >= 0.35)
+        {
+            return true;
+        }
+
+        if (verticalGap <= GetParagraphBreakThreshold(metrics))
+            return false;
 
         if (EndsWithSentenceEnding(previous.Text) && (sameLeftEdge || currentIsIndented))
             return true;
 
-        if (StartsWithUpperLatin(current.Text) && sameLeftEdge)
+        if (StartsWithUpperLatin(current.Text) && (sameLeftEdge || currentLooksLikeFirstLineIndent))
             return true;
 
-        return previousIsShortLine && currentReturnsToBodyLeft && horizontalOverlap >= 0.45;
+        return previousIsShortLine && currentReturnsToPreviousLeft && horizontalOverlap >= 0.45;
+    }
+
+    private static bool LooksLikeFirstLineIndent(ParagraphGroup paragraph, LineSegment current, LayoutMetrics metrics)
+    {
+        var indent = current.Bounds.Left - paragraph.BodyLeft;
+        return indent >= metrics.LineHeight * 0.55 &&
+               indent <= metrics.LineHeight * 2.5;
     }
 
     private static double GetParagraphBreakThreshold(LayoutMetrics metrics) =>
@@ -1036,7 +1058,22 @@ internal static class OcrLayoutAnalyzer
 
         internal LineSegment LastLine => Lines[^1];
 
+        internal double BodyLeft => Lines.Count == 1
+            ? Lines[0].Bounds.Left
+            : Median(Lines.Skip(1).Select(x => x.Bounds.Left));
+
         internal Bounds Bounds => Bounds.Union(Lines.Select(x => x.Bounds));
+
+        internal bool IsShortLine(LineSegment line, LayoutMetrics metrics)
+        {
+            if (Lines.Count < 2)
+                return false;
+
+            var typicalWidth = Median(Lines.Select(x => x.Bounds.Width));
+            return typicalWidth >= metrics.LineHeight * 6 &&
+                   line.Bounds.Width <= typicalWidth * 0.72 &&
+                   typicalWidth - line.Bounds.Width >= metrics.LineHeight * 2.2;
+        }
 
         internal void Add(LineSegment line, double confidence)
         {

@@ -337,6 +337,44 @@ public class OcrLayoutAnalyzerTests
     }
 
     [Fact]
+    public void SmartSplitsAfterShortLastLineRelativeToParagraphWidth()
+    {
+        var result = AnalyzeSmart(
+            Box("the first paragraph keeps a regular body width", 0, 0, 520, 30),
+            Box("and continues with the same regular body width", 0, 36, 520, 30),
+            Box("before ending shorter", 0, 72, 360, 30),
+            Box("another paragraph starts with narrower text", 0, 126, 400, 30),
+            Box("and continues on the next body line", 0, 162, 500, 30));
+
+        Assert.Equal(2, result.Count);
+        Assert.Equal(
+            "the first paragraph keeps a regular body width and continues with the same regular body width before ending shorter",
+            result[0].Text);
+        Assert.Equal(
+            "another paragraph starts with narrower text and continues on the next body line",
+            result[1].Text);
+    }
+
+    [Fact]
+    public void SmartSplitsIndentedParagraphAfterShortLastLineWithoutBlankLine()
+    {
+        var result = AnalyzeSmart(
+            Box("first paragraph starts with an indent", 24, 0, 420, 30),
+            Box("continues on the full body width", 0, 36, 500, 30),
+            Box("ends on a short last line", 0, 72, 240, 30),
+            Box("next paragraph starts indented", 24, 108, 430, 30),
+            Box("continues with body text", 0, 144, 490, 30));
+
+        Assert.Equal(2, result.Count);
+        Assert.Equal(
+            "first paragraph starts with an indent continues on the full body width ends on a short last line",
+            result[0].Text);
+        Assert.Equal(
+            "next paragraph starts indented continues with body text",
+            result[1].Text);
+    }
+
+    [Fact]
     public void ApplyLeavesContentsWithoutBoxPointsUnchanged()
     {
         var ocrResult = new OcrResult
