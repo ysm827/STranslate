@@ -141,7 +141,10 @@
   - 修复：精简窗口和独立窗口都改用 `Ioc.Default.CreateScope()` 解析 VM，`OnClosed` 时 `scope.Dispose()` 释放 VM，使其脱离 root 跟踪列表。
   - **该类累积的条件**：①Disposable Transient VM 从 root provider 解析；②窗口反复新建关闭。只有同时满足才会按窗口创建次数在 root scope 中累积。
 
-- **其他窗口的风险评估**：`OcrWindow` 和 `WelcomeSetupWindow` 都会关闭，且其 `IDisposable` transient VM 当前仍从 root provider 解析；反复关闭并重新创建时存在同类 DI 跟踪风险。`SettingsWindowViewModel` 未实现 `IDisposable`，没有这一条 VM 跟踪问题，但其页面 scope 和视觉树生命周期需要单独评估。
+- **其他窗口的同类修复**：`OcrWindow`、`WelcomeSetupWindow`、`SettingsWindow` 的 transient VM 同样会从 root provider 解析，现已统一改用 `Ioc.Default.CreateScope()` 解析，`OnClosed` 经 `ModernWindowLifecycle.Release(this, _serviceScope.Dispose)` 释放。
+  - `OcrWindow` / `WelcomeSetupWindow` 的 VM 实现了 `IDisposable`，关闭时释放 scope 会触发 `Dispose()`，取消对 `OcrService` / `Settings` 等单例的事件订阅。
+  - `SettingsWindowViewModel` 未实现 `IDisposable`，但其各页面与页面 VM（如 `HistoryViewModel`）为 `Scoped` 注册，从 root provider 解析会被 root scope 跟踪、`Dispose()` 永不触发；改用独立 scope 后关闭窗口即可释放已解析的页面 VM，触发其 `Dispose()` 取消全局订阅。
+  - `SettingsWindow.OnClosed` 在释放 scope 前还会清空 `RootFrame.Content` 并解绑导航事件，避免长期页面通过 `Frame` 反向持有已关闭窗口。
 
 - **渲染峰值优化（顺带）**：
   - `ExecuteAsync` 生成结果图时复用已缓存并 `Freeze` 的 `_sourceImage`，取消对原图的第二次 `ToBitmapImage` 解码。

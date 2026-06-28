@@ -67,9 +67,9 @@
   - `OnContentRendered()` 决定首次显示或隐藏。
   - `OnDeactivated()` 可按 `HideWhenDeactivated` 自动隐藏，避免 Alt-Tab 残留。
 - `SettingsWindow`：
-  - `Navigate(tag)` 根据页面类型从 DI 取页实例并注入到 `RootFrame.Content`。
+  - `Navigate(tag)` 根据页面类型从 DI 取页实例并注入到 `RootFrame.Content`；页面及页面 VM 为 `Scoped` 注册，统一从窗口独有的 `IServiceScope` 解析。
   - `Ctrl+F` 由 `OnKeyDown` 路由到当前页面的搜索框。
-  - 设置页继续由 root scope 长期复用，兼容插件缓存的设置控件和页面 ViewModel 的全局订阅；窗口关闭时必须先清空 `RootFrame.Content`，再拆除导航视觉树，避免长期页面通过 `Frame` 反向持有已关闭窗口。
+  - 窗口构造时 `Ioc.Default.CreateScope()` 建立独立 scope；`OnClosed` 先解绑导航事件、清空 `RootFrame.Content`，再经 `ModernWindowLifecycle.Release(this, _serviceScope.Dispose)` 拆除视觉树并释放 scope，触发已解析页面 VM（如 `HistoryViewModel`）的 `Dispose()` 取消全局订阅，避免 root scope 长期跟踪导致泄漏。
   - `OnClosing` 通过 `ModernWindowLifecycle.DetachModernWindowStyle()` 解除 iNKORE titlebar 的属性描述符监听；`OnClosed` 清空 `DataContext` 和内容树。
 - `WelcomeSetupWindow`：
   - 自动显示只由启动前配置文件是否存在决定，不新增单独的完成标记。
