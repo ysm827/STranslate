@@ -141,6 +141,8 @@ internal static class ImageTranslateRenderer
         var backgroundBrush = new SolidColorBrush(plan.OverlayBackgroundColor);
         backgroundBrush.Freeze();
 
+        // Display 模式在大字号 CJK 文本叠加裁剪/缩放时可能不输出 glyph；
+        // 使用 Ideal 保持矢量缩放稳定，并与测量、选择框构建使用的 metrics 一致。
         var formattedText = CreateFormattedText(
             content.Text,
             plan.FontSize,
@@ -151,7 +153,7 @@ internal static class ImageTranslateRenderer
             plan.ShouldTrim || !plan.IsMultiLine,
             pixelsPerDip,
             plan.MaxLineCount,
-            TextFormattingMode.Display);
+            TextFormattingMode.Ideal);
         var shadowText = CreateFormattedText(
             content.Text,
             plan.FontSize,
@@ -162,7 +164,7 @@ internal static class ImageTranslateRenderer
             plan.ShouldTrim || !plan.IsMultiLine,
             pixelsPerDip,
             plan.MaxLineCount,
-            TextFormattingMode.Display);
+            TextFormattingMode.Ideal);
 
         var textPosition = new Point(
             plan.TextRect.Left,

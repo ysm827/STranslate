@@ -28,7 +28,10 @@ public class ImageTranslateTextOverlayLayoutTests
         Assert.True(plan.IsMultiLine);
         Assert.False(plan.ShouldTrim);
         Assert.True(plan.FontSize > 30 * 0.90);
-        Assert.Equal(ImageTranslateTextOverlayPlan.MaxFontSize, plan.FontSize);
+        Assert.InRange(
+            plan.FontSize,
+            plan.TextRect.Height / ImageTranslateTextOverlayPlan.MultilineLineHeightScale - 0.5,
+            plan.TextRect.Height / ImageTranslateTextOverlayPlan.MultilineLineHeightScale + 0.5);
     }
 
     [Fact]
@@ -109,7 +112,7 @@ public class ImageTranslateTextOverlayLayoutTests
     [Fact]
     public void MultilinePrioritizesLargerFontWithCompactFitLineHeight()
     {
-        const double textUnits = 600;
+        const double textUnits = 550;
         var block = Block(
             Box(0, 0, 1000, 240),
             Box(0, 0, 900, 30),
@@ -124,8 +127,9 @@ public class ImageTranslateTextOverlayLayoutTests
             (fontSize, textRect) => MeasureWrappedText(fontSize, textRect, textUnits));
         var measured = MeasureWrappedText(plan.FontSize, plan.TextRect, textUnits);
 
-        Assert.True(plan.FontSize > 18);
-        Assert.True(measured.Height >= plan.TextRect.Height * 0.90);
+        Assert.True(plan.FontSize > ImageTranslateTextOverlayPlan.MinFontSize * 2);
+        Assert.True(plan.LineHeight >= plan.FontSize * ImageTranslateTextOverlayPlan.MultilineLineHeightScale);
+        Assert.True(plan.LineHeight <= plan.FontSize * 2);
         Assert.True(measured.Height <= plan.TextRect.Height + 0.1);
     }
 

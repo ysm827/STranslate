@@ -90,7 +90,56 @@ public class ImageTranslateOverlayTests
         });
     }
 
+    [Fact]
+    public void OverlayRendersLargeChineseTitleText()
+    {
+        RunOnStaThread(() =>
+        {
+            var document = ImageTranslateRenderer.CreateTranslatedOverlay(
+                [
+                    CreateBlock(
+                        "我们穿越荆棘和玫瑰的旅程",
+                        left: 149.648468,
+                        top: 85.732590,
+                        width: 1568.743286,
+                        height: 78.889755)
+                ],
+                ImageTranslateOverlayTheme.Light);
+            var overlay = new ImageTranslateOverlay
+            {
+                Width = 1920,
+                Height = 240,
+                Document = document
+            };
+
+            Assert.True(RenderHasDarkPixels(overlay, 1920, 240));
+        });
+    }
+
     private static bool RenderHasVisiblePixels(FrameworkElement element, int width, int height)
+    {
+        var pixels = RenderPixels(element, width, height);
+        return pixels.Where((_, index) => index % 4 == 3).Any(alpha => alpha != 0);
+    }
+
+    private static bool RenderHasDarkPixels(FrameworkElement element, int width, int height)
+    {
+        var pixels = RenderPixels(element, width, height);
+        for (var index = 0; index < pixels.Length; index += 4)
+        {
+            var blue = pixels[index];
+            var green = pixels[index + 1];
+            var red = pixels[index + 2];
+            var alpha = pixels[index + 3];
+
+            if (alpha > 120 && red < 80 && green < 80 && blue < 80)
+                return true;
+        }
+
+        return false;
+    }
+
+    private static byte[] RenderPixels(FrameworkElement element, int width, int height)
     {
         element.Measure(new Size(width, height));
         element.Arrange(new Rect(0, 0, width, height));
@@ -100,7 +149,7 @@ public class ImageTranslateOverlayTests
         bitmap.Render(element);
         var pixels = new byte[width * height * 4];
         bitmap.CopyPixels(pixels, width * 4, 0);
-        return pixels.Where((_, index) => index % 4 == 3).Any(alpha => alpha != 0);
+        return pixels;
     }
 
     private static OcrLayoutBlock CreateBlock(
