@@ -129,7 +129,7 @@ public static class AppMessageBox
         public static MessageBoxOwnerScope ForTemporaryOwner(Window owner)
         {
             owner.Show();
-            Win32Helper.ForceSetForegroundWindow(owner);
+            Win32Helper.SetForegroundWindow(owner);
             owner.Activate();
 
             return new(owner, true);

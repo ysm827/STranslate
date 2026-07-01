@@ -349,7 +349,7 @@ public partial class HotkeySettings : ObservableObject
                 OpenWindowHotkey.IsConflict = !HotkeyMapper.SetHotkey(OpenWindowHotkey.Key, WithFullscreenCheck(() => MainWindowViewModel.ToggleAppCommand.Execute(null)));
                 break;
             case nameof(InputTranslateHotkey):
-                InputTranslateHotkey.IsConflict = !HotkeyMapper.SetHotkey(InputTranslateHotkey.Key, WithFullscreenCheck(() => MainWindowViewModel.InputClearCommand.Execute(WindowActivationMode.Normal)));
+                InputTranslateHotkey.IsConflict = !HotkeyMapper.SetHotkey(InputTranslateHotkey.Key, WithFullscreenCheck(() => MainWindowViewModel.InputClearCommand.Execute(null)));
                 break;
             case nameof(CrosswordTranslateHotkey):
                 CrosswordTranslateHotkey.IsConflict = !HotkeyMapper.SetHotkey(CrosswordTranslateHotkey.Key, WithFullscreenCheck(() => MainWindowViewModel.CrosswordTranslateCommand.Execute(null)));

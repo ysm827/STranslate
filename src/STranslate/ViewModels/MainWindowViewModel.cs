@@ -261,10 +261,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     /// </summary>
     /// <param name="text"></param>
     /// <param name="force">不为空则跳过缓存</param>
-    public void ExecuteTranslate(
-        string text,
-        string? force = null,
-        WindowActivationMode activationMode = WindowActivationMode.Normal)
+    public void ExecuteTranslate(string text, string? force = null)
     {
         ExitInputTranslateMode();
         CancelAllOperations();
@@ -278,7 +275,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         if (skipShow)
             return;
 
-        Show(activationMode);
+        Show();
         UpdateCaret();
     }
 
@@ -1152,7 +1149,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
             {
                 window.PlaceForCapture(physicalBounds, bitmap.Size);
                 executeTask = ((ImageTranslateWindowViewModel)window.DataContext).ExecuteCommand.ExecuteAsync(bitmap);
-            }, WindowActivationMode.ForceForeground);
+            });
 
             if (executeTask != null)
                 await executeTask;
@@ -1758,7 +1755,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     /// </summary>
     public void InitializeWindowLayoutConstraints() => UpdateMainWindowMaxHeightConstraint();
 
-    public void Show(WindowActivationMode activationMode = WindowActivationMode.Normal)
+    public void Show()
     {
         if (Settings.MainWindowLeft <= -18000 && Settings.MainWindowTop <= -18000)
         {
@@ -1770,10 +1767,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         UpdatePosition();
         UpdateMainWindowMaxHeightConstraint();
 
-        if (activationMode == WindowActivationMode.ForceForeground)
-            Win32Helper.ForceSetForegroundWindow(MainWindow);
-        else
-            Win32Helper.SetForegroundWindow(MainWindow);
+        Win32Helper.SetForegroundWindow(MainWindow);
 
         MainWindow.Activate();
 
@@ -1832,12 +1826,12 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
-    private void ToggleApp(WindowActivationMode? activationMode = null)
+    private void ToggleApp()
     {
         if (IsMainWindowVisible && !IsTopmost)
             Hide();
         else
-            Show(activationMode ?? WindowActivationMode.Normal);
+            Show();
     }
 
     [RelayCommand]
@@ -1858,20 +1852,16 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         await OpenSettingsAndNavigateAsync(parameter);
     }
 
-    internal async Task OpenSettingsAndNavigateAsync(
-        object? parameter,
-        WindowActivationMode activationMode = WindowActivationMode.Normal)
+    internal async Task OpenSettingsAndNavigateAsync(object? parameter)
     {
         var isAlreadyOpen = Application.Current.Windows.OfType<SettingsWindow>().Any();
-        var window = await OpenSettingsInternalAsync(parameter, activationMode);
+        var window = await OpenSettingsInternalAsync(parameter);
 
         if (!isAlreadyOpen)
             window.Navigate(nameof(GeneralPage));
     }
 
-    internal async Task<SettingsWindow> OpenSettingsInternalAsync(
-        object? parameter,
-        WindowActivationMode activationMode = WindowActivationMode.Normal)
+    internal async Task<SettingsWindow> OpenSettingsInternalAsync(object? parameter)
     {
         // 如果由 ContextMenu 触发，等待关闭动画完成
         if (parameter is not null)
@@ -1881,7 +1871,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         if (MainWindow.IsActive && IsMainWindowVisible && !IsTopmost)
             Hide();
 
-        return await SingletonWindowOpener.OpenAsync<SettingsWindow>(activationMode);
+        return await SingletonWindowOpener.OpenAsync<SettingsWindow>();
     }
 
     [RelayCommand]
@@ -1890,9 +1880,9 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         await OpenHistoryInternalAsync();
     }
 
-    internal async Task OpenHistoryInternalAsync(WindowActivationMode activationMode = WindowActivationMode.Normal)
+    internal async Task OpenHistoryInternalAsync()
     {
-        var window = await OpenSettingsInternalAsync(null, activationMode);
+        var window = await OpenSettingsInternalAsync(null);
         window.Navigate(nameof(HistoryPage));
     }
 
@@ -1932,7 +1922,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     #region Text & Clipboard Manipulation
 
     [RelayCommand]
-    private void InputClear(WindowActivationMode activationMode = WindowActivationMode.Normal)
+    private void InputClear()
     {
         CancelAllOperations();
         ResetTranslationLanguageState();
@@ -1940,7 +1930,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
         ResetAllServices();
         EnterInputTranslateMode();
-        Show(activationMode);
+        Show();
     }
 
     [RelayCommand]

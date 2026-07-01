@@ -51,7 +51,7 @@ public partial class AboutViewModel(
 
     [RelayCommand]
     private async Task OpenWizardAsync()
-        => await SingletonWindowOpener.OpenAsync<WelcomeSetupWindow>(WindowActivationMode.ForceForeground);
+        => await SingletonWindowOpener.OpenAsync<WelcomeSetupWindow>();
 
     [RelayCommand]
     private void LocateUserData() => Locate(Path.GetDirectoryName(Path.Combine(DataLocation.SettingsDirectory)));

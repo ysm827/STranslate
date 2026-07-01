@@ -87,16 +87,10 @@ public static class Win32Helper
 
     public static bool SetForegroundWindow(nint handle) => SetForegroundWindow(new HWND(handle));
 
-    internal static bool SetForegroundWindow(HWND handle) => PInvoke.SetForegroundWindow(handle);
-
-    public static bool ForceSetForegroundWindow(Window window) => ForceSetForegroundWindow(GetWindowHandle(window));
-
-    public static bool ForceSetForegroundWindow(nint handle) => ForceSetForegroundWindow(new HWND(handle));
-
     /// <summary>
-    /// 外部调用从后台唤起窗口时使用 AttachThreadInput 绕过 Foreground Lockout。
+    /// 强制将窗口带到前台，使用 AttachThreadInput 绕过系统限制。
     /// </summary>
-    internal static bool ForceSetForegroundWindow(HWND handle)
+    internal static bool SetForegroundWindow(HWND handle)
     {
         var foregroundWnd = PInvoke.GetForegroundWindow();
         if (handle == foregroundWnd) return true;

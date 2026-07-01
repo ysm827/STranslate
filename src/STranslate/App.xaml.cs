@@ -501,7 +501,7 @@ public partial class App : ISingleInstanceApp, INavigation, IDisposable
         var welcomeWindow = Current.Windows.OfType<WelcomeSetupWindow>().FirstOrDefault();
         if (welcomeWindow != null)
         {
-            Win32Helper.ForceSetForegroundWindow(welcomeWindow);
+            Win32Helper.SetForegroundWindow(welcomeWindow);
             welcomeWindow.Activate();
             return;
         }
